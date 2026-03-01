@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <!-- 背景 -->
+  <rect width="512" height="512" rx="72" fill="#1a1208"/>
+  <!-- 牌の外枠 -->
+  <rect x="72" y="58" width="368" height="396" rx="32" fill="#f5f0e8"/>
+  <rect x="82" y="68" width="348" height="376" rx="26" fill="#faf7f0" stroke="#1a1208" stroke-width="4"/>
+  <!-- 雀の文字 -->
+  <text x="256" y="268" font-family="serif" font-size="196" font-weight="bold"
+        fill="#c0392b" text-anchor="middle" dominant-baseline="middle">雀</text>
+  <!-- 装飾ライン -->
+  <line x1="100" y1="344" x2="412" y2="344" stroke="#b8860b" stroke-width="3" opacity="0.6"/>
+  <!-- サブテキスト -->
+  <text x="256" y="386" font-family="serif" font-size="36" fill="#b8860b"
+        text-anchor="middle" letter-spacing="8">成績集計</text>
+</svg>

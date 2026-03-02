@@ -644,6 +644,27 @@
         border-radius: 10px;
         letter-spacing: 0.06em;
       }
+      .type-badge {
+        font-size: 0.62rem;
+        padding: 1px 6px;
+        border-radius: 10px;
+        background: rgba(26, 18, 8, 0.07);
+        color: #999;
+        letter-spacing: 0.06em;
+        vertical-align: middle;
+      }
+      .type-badge.set {
+        background: rgba(44, 120, 115, 0.12);
+        color: var(--teal);
+      }
+      .venue-badge {
+        font-size: 0.68rem;
+        background: rgba(44, 120, 115, 0.1);
+        color: var(--teal);
+        padding: 2px 8px;
+        border-radius: 10px;
+        letter-spacing: 0.06em;
+      }
 
       /* HISTORY SUMMARY */
       .hist-summary {
@@ -1099,7 +1120,7 @@
                 <select id="s-rule"></select>
               </div>
             </div>
-            <div class="g2">
+            <div class="g3">
               <div class="fg">
                 <label>人数</label>
                 <select id="s-players">
@@ -1113,6 +1134,13 @@
                   <option value="東南戦">東南戦</option>
                   <option value="東風戦">東風戦</option>
                   <option value="一荘戦">一荘戦</option>
+                </select>
+              </div>
+              <div class="fg">
+                <label>種別</label>
+                <select id="s-gametype">
+                  <option value="free">フリー</option>
+                  <option value="set">セット</option>
                 </select>
               </div>
             </div>
@@ -1164,6 +1192,15 @@
                 <div class="chip-hint" id="chip-calc"></div>
               </div>
             </div>
+            <div class="fg" id="venue-fee-wrap" style="display:none;margin-bottom:11px">
+              <label>場代（円）</label>
+              <input
+                type="number"
+                id="s-venue-fee"
+                placeholder="例：3000"
+                oninput="updateSaveSummary()"
+              />
+            </div>
             <div class="fg" style="margin-bottom: 12px">
               <label>メモ（任意）</label>
               <input
@@ -1196,6 +1233,11 @@
             <option value="4">四人</option>
             <option value="3">三人</option>
           </select>
+          <select class="fsel" id="f-gametype" onchange="renderHistory()">
+            <option value="all">全種別</option>
+            <option value="free">フリー</option>
+            <option value="set">セット</option>
+          </select>
           <select class="fsel" id="f-rate" onchange="renderHistory()"></select>
           <select class="fsel" id="f-fee" onchange="renderHistory()">
             <option value="0">ゲーム代なし</option>
@@ -1215,6 +1257,11 @@
       <!-- ===== ANALYSIS ===== -->
       <div class="pane" id="pane-analysis">
         <div class="filter-bar" style="margin-bottom: 13px">
+          <select class="fsel" id="an-gametype" onchange="renderAnalysis()">
+            <option value="all">全種別</option>
+            <option value="free">フリー</option>
+            <option value="set">セット</option>
+          </select>
           <select class="fsel" id="an-fee" onchange="renderAnalysis()">
             <option value="0">ゲーム代なし</option>
             <option value="1">ゲーム代あり</option>
@@ -1533,6 +1580,7 @@
         const players = parseInt(document.getElementById("s-players").value);
         const format = document.getElementById("s-format").value;
         const rule = document.getElementById("s-rule").value;
+        const gameType = document.getElementById("s-gametype").value;
         const presetId = document.getElementById("s-shop-preset").value;
         const shopData = presetId
           ? loadShops().find((s) => s.id == presetId)
@@ -1543,6 +1591,7 @@
           players,
           format,
           rule,
+          gameType,
           shopData: shopData || null,
           counts: { 1: 0, 2: 0, 3: 0, 4: 0 },
         };
@@ -1554,13 +1603,16 @@
         document.getElementById("setup-section").style.display = "none";
         document.getElementById("session-section").style.display = "";
         document.getElementById("sess-shop").textContent = cur.shop;
+        const typeLabel = cur.gameType === "set" ? "セット" : "フリー";
         document.getElementById("sess-meta").textContent =
-          `${cur.date}　${cur.players}人 ${cur.format}${cur.rule ? " / " + cur.rule : ""}`;
+          `${cur.date}　${cur.players}人 ${cur.format}${cur.rule ? " / " + cur.rule : ""}　[${typeLabel}]`;
         buildCards();
         refreshCounts();
         const chipWrap = document.getElementById("chip-input-wrap");
         chipWrap.style.display =
           cur.shopData && cur.shopData.chipUnit ? "" : "none";
+        const venueFeeWrap = document.getElementById("venue-fee-wrap");
+        if (venueFeeWrap) venueFeeWrap.style.display = cur.gameType === "set" ? "" : "none";
         updateSaveSummary();
       }
 
@@ -1626,18 +1678,26 @@
 
       function updateSaveSummary() {
         const el = document.getElementById("save-summary");
-        if (!cur || !cur.shopData || !cur.shopData.chipUnit) {
+        const isSet = cur && cur.gameType === "set";
+        const hasChips = !!(cur && cur.shopData && cur.shopData.chipUnit);
+        if (!hasChips && !isSet) {
           el.style.display = "none";
           return;
         }
         const cash = parseInt(document.getElementById("s-balance").value) || 0;
-        const chips = parseInt(document.getElementById("s-chips").value) || 0;
-        const unit = cur.shopData.chipUnit;
+        const chips = hasChips ? (parseInt(document.getElementById("s-chips").value) || 0) : 0;
+        const unit = hasChips ? cur.shopData.chipUnit : 0;
         const chipVal = chips * unit;
-        const net = cash + chipVal;
+        const venueFeeEl = document.getElementById("s-venue-fee");
+        const venueFee = isSet && venueFeeEl ? (parseInt(venueFeeEl.value) || 0) : 0;
+        const net = cash + chipVal - venueFee;
         const fn = (v) => (v >= 0 ? "+" : "") + v.toLocaleString() + "円";
         el.style.display = "";
-        el.innerHTML = `現金収支 ${fn(cash)}　＋　チップ ${fn(chipVal)}　＝　<strong>純収支 ${fn(net)}</strong>`;
+        let html = `現金収支 ${fn(cash)}`;
+        if (hasChips) html += `　＋　チップ ${fn(chipVal)}`;
+        if (isSet && venueFee) html += `　－　場代 ${venueFee.toLocaleString()}円`;
+        html += `　＝　<strong>純収支 ${fn(net)}</strong>`;
+        el.innerHTML = html;
       }
 
       function confirmEnd() {
@@ -1655,7 +1715,7 @@
         sessionStorage.removeItem("mj4_cur");
         document.getElementById("setup-section").style.display = "";
         document.getElementById("session-section").style.display = "none";
-        ["s-balance", "s-chips", "s-note"].forEach((id) => {
+        ["s-balance", "s-chips", "s-note", "s-venue-fee"].forEach((id) => {
           const el = document.getElementById(id);
           if (el) el.value = "";
         });
@@ -1675,7 +1735,10 @@
             : 0;
         const chipUnit = (cur.shopData && cur.shopData.chipUnit) || 0;
         const chipVal = chips * chipUnit;
-        const net = balance + chipVal;
+        const venueFee = cur.gameType === "set"
+          ? parseInt(document.getElementById("s-venue-fee").value) || 0
+          : 0;
+        const net = balance + chipVal - venueFee;
         const sessions = loadSessions();
         sessions.unshift({
           id: Date.now(),
@@ -1684,12 +1747,14 @@
           players: cur.players,
           format: cur.format,
           rule: cur.rule,
+          gameType: cur.gameType || "free",
           shopId: cur.shopData ? cur.shopData.id : null,
           counts: { ...cur.counts },
           balance,
           chips,
           chipUnit,
           chipVal,
+          venueFee,
           net,
           gameFee: (cur.shopData && cur.shopData.gameFee) || 0,
           topPrize: (cur.shopData && cur.shopData.topPrize) || 0,
@@ -1737,11 +1802,13 @@
 
       function renderHistory() {
         const fp = document.getElementById("f-players").value;
+        const fg = document.getElementById("f-gametype").value;
         const fr = document.getElementById("f-rate").value;
         const fs = document.getElementById("f-sort").value;
         const ff = document.getElementById("f-fee").value === "1";
         let data = loadSessions();
         if (fp !== "all") data = data.filter((s) => s.players == fp);
+        if (fg !== "all") data = data.filter((s) => (s.gameType || "free") === fg);
         if (fr !== "all") data = data.filter((s) => s.rule == fr);
         if (fs === "old") data.sort((a, b) => a.date.localeCompare(b.date));
         else if (fs === "balH")
@@ -1815,11 +1882,16 @@
             const chipBadge = s.chipVal
               ? `<span class="chip-badge">チップ ${s.chipVal >= 0 ? "+" : ""}${s.chipVal.toLocaleString()}円</span>`
               : "";
+            const venueBadge = s.venueFee
+              ? `<span class="venue-badge">場代 −${s.venueFee.toLocaleString()}円</span>`
+              : "";
+            const isSetType = s.gameType === "set";
+            const typeBadge = `<span class="type-badge${isSetType ? " set" : ""}">${isSetType ? "セット" : "フリー"}</span>`;
             return `<div class="sess-item">
       <div class="sh">
         <div>
           <div class="sh-shop">${esc(s.shop)}</div>
-          <div class="sh-meta">${s.date}　${s.players}人 ${s.format}${s.rule ? " / " + (/^\d+$/.test(s.rule) ? "レート" + s.rule + "点" : esc(s.rule)) : ""}</div>
+          <div class="sh-meta">${s.date}　${s.players}人 ${s.format}${s.rule ? " / " + (/^\d+$/.test(s.rule) ? "レート" + s.rule + "点" : esc(s.rule)) : ""}　${typeBadge}</div>
         </div>
         <div class="sh-right">
           <div class="sh-bal ${bc(net)}">${fn(net)}</div>
@@ -1830,6 +1902,7 @@
         ${chips}
         <div class="stotal">${total}局</div>
         ${chipBadge}
+        ${venueBadge}
         ${s.note ? `<div class="snote">${esc(s.note)}</div>` : ""}
       </div>
     </div>`;
@@ -1853,10 +1926,14 @@
 
       function renderAnalysis() {
         const withFees = document.getElementById("an-fee").value === "1";
+        const anGt = document.getElementById("an-gametype").value;
         const rawAll = loadSessions();
-        const all = withFees
-          ? rawAll.map(s => ({ ...s, net: getNet(s, true) }))
+        const rawFiltered = anGt !== "all"
+          ? rawAll.filter(s => (s.gameType || "free") === anGt)
           : rawAll;
+        const all = withFees
+          ? rawFiltered.map(s => ({ ...s, net: getNet(s, true) }))
+          : rawFiltered;
         renderLineChart(all);
         renderDist(
           all.filter((s) => s.players === 4),
@@ -2263,6 +2340,7 @@
           "店舗名",
           "人数",
           "戦型",
+          "種別",
           "レート",
           "1着",
           "2着",
@@ -2272,6 +2350,7 @@
           "現金収支",
           "チップ枚数",
           "チップ収支",
+          "場代",
           "純収支",
           "メモ",
         ];
@@ -2285,6 +2364,7 @@
             s.shop,
             s.players + "人",
             s.format,
+            s.gameType === "set" ? "セット" : "フリー",
             s.rule || "",
             s.counts[1] || 0,
             s.counts[2] || 0,
@@ -2294,6 +2374,7 @@
             s.balance || 0,
             s.chips || 0,
             s.chipVal || 0,
+            s.venueFee || 0,
             s.net !== undefined ? s.net : s.balance,
             s.note || "",
           ].map((v) => '"' + String(v).replace(/"/g, '""') + '"');

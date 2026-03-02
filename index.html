@@ -141,43 +141,6 @@
         display: block;
       }
 
-      /* TOP STATS */
-      .top-stats {
-        display: grid;
-        grid-template-columns: repeat(4, 1fr);
-        gap: 9px;
-        margin-bottom: 18px;
-      }
-      @media (max-width: 440px) {
-        .top-stats {
-          grid-template-columns: repeat(2, 1fr);
-        }
-      }
-      .ts {
-        background: var(--cream);
-        border: 1px solid rgba(26, 18, 8, 0.14);
-        border-radius: 2px;
-        padding: 11px 8px;
-        text-align: center;
-        box-shadow: 2px 2px 0 var(--sh);
-      }
-      .ts-l {
-        font-size: 0.64rem;
-        letter-spacing: 0.14em;
-        color: #aaa;
-        margin-bottom: 3px;
-      }
-      .ts-v {
-        font-family: "Shippori Mincho", serif;
-        font-size: 1.3rem;
-        font-weight: 700;
-      }
-      .ts-v.pos {
-        color: var(--teal);
-      }
-      .ts-v.neg {
-        color: var(--red);
-      }
 
       /* PANEL */
       .panel {
@@ -1063,25 +1026,6 @@
         <div class="h-title">麻雀成績集計</div>
       </header>
 
-      <!-- TOP STATS -->
-      <div class="top-stats">
-        <div class="ts">
-          <div class="ts-l">総対局数</div>
-          <div class="ts-v" id="tsGames">0</div>
-        </div>
-        <div class="ts">
-          <div class="ts-l">平均着順</div>
-          <div class="ts-v" id="tsAvg">—</div>
-        </div>
-        <div class="ts">
-          <div class="ts-l">1着率</div>
-          <div class="ts-v" id="tsFirst">—</div>
-        </div>
-        <div class="ts">
-          <div class="ts-l">累計純収支</div>
-          <div class="ts-v" id="tsBal">¥0</div>
-        </div>
-      </div>
 
       <div class="tabs">
         <button class="tab active" data-tab="record">記録する</button>
@@ -1235,7 +1179,7 @@
           <select class="fsel" id="f-players" onchange="renderHistory()">
             <option value="all">全人数</option>
             <option value="4">四麻</option>
-            <option value="3">三麻</option>
+            <oion value="3">三麻</option>
           </select>
           <select class="fsel" id="f-gametype" onchange="renderHistory()">
             <option value="all">全種別</option>
@@ -1361,7 +1305,11 @@
           <select class="fsel" id="an-shop-filter" onchange="renderAnalysis()">
             <option value="all">全店舗</option>
           </select>
-          <select class="fsel" id="an-rate" onchange="renderAnalysis()"></select>
+          <select
+            class="fsel"
+            id="an-rate"
+            onchange="renderAnalysis()"
+          ></select>
           <select class="fsel" id="an-fee" onchange="renderAnalysis()">
             <option value="0">ゲーム代なし</option>
             <option value="1">ゲーム代あり</option>
@@ -1391,6 +1339,10 @@
               onchange="renderAnalysis()"
             />
           </div>
+        </div>
+        <div class="a-card" style="margin-bottom: 13px">
+          <h3>平均着順</h3>
+          <div id="an-avg-rank"></div>
         </div>
         <div class="a-card" style="margin-bottom: 13px">
           <h3>累計純収支の推移</h3>
@@ -1831,10 +1783,12 @@
         }
 
         const cash = parseInt(document.getElementById("s-balance").value) || 0;
-        const chips = hasChips ? parseInt(document.getElementById("s-chips").value) || 0 : 0;
+        const chips = hasChips
+          ? parseInt(document.getElementById("s-chips").value) || 0
+          : 0;
         const unit = hasChips ? cur.shopData.chipUnit : 0;
         const chipVal = chips * unit;
-        
+
         // 純収支は、最終的な現金収支とチップ収支の合計とする
         const net = cash + chipVal;
 
@@ -1849,11 +1803,12 @@
 
         // セットの場代は参考情報として表示する
         const venueFeeEl = document.getElementById("s-venue-fee");
-        const venueFee = isSet && venueFeeEl ? parseInt(venueFeeEl.value) || 0 : 0;
+        const venueFee =
+          isSet && venueFeeEl ? parseInt(venueFeeEl.value) || 0 : 0;
         if (isSet && venueFee > 0) {
-           html += `<br><span style="font-size:0.8em; color: #777;">（参考：入力された場代 ${venueFee.toLocaleString()}円）</span>`;
+          html += `<br><span style="font-size:0.8em; color: #777;">（参考：入力された場代 ${venueFee.toLocaleString()}円）</span>`;
         }
-        
+
         el.innerHTML = html;
       }
 
@@ -1896,8 +1851,7 @@
           cur.gameType === "set"
             ? parseInt(document.getElementById("s-venue-fee").value) || 0
             : 0;
-        // 純収支(net)は、最終的な現金収支(balance)とチップ収支(chipVal)の合計。場代は含めない。
-        const net = balance + chipVal;
+        const net = balance + chipVal - venueFee;
         const sessions = loadSessions();
         sessions.unshift({
           id: Date.now(),
@@ -1925,57 +1879,19 @@
         setTimeout(() => clearSession(), 800);
       }
 
-      function updateTopStats() {
-        const all = loadSessions();
-        let games = 0,
-          sum = 0,
-          first = 0,
-          bal = 0;
-        all.forEach((s) => {
-          for (let p = 1; p <= s.players; p++) {
-            const c = s.counts[p] || 0;
-            games += c;
-            sum += p * c;
-            if (p === 1) first += c;
-          }
-          bal += s.net !== undefined ? s.net : s.balance || 0;
-        });
-        document.getElementById("tsGames").textContent = games;
-        document.getElementById("tsAvg").textContent = games
-          ? (sum / games).toFixed(2)
-          : "—";
-        document.getElementById("tsFirst").textContent = games
-          ? Math.round((first / games) * 100) + "%"
-          : "—";
-        const el = document.getElementById("tsBal");
-        el.textContent = (bal >= 0 ? "¥+" : "¥") + bal.toLocaleString();
-        el.className = "ts-v " + (bal > 0 ? "pos" : bal < 0 ? "neg" : "");
-      }
+      function updateTopStats() {}
 
       function getNet(s, withFees) {
-        // s.netは、ゲーム代支払い後の「最終現金収支 + チップ収支」
         const net = s.net !== undefined ? s.net : s.balance;
-
-        if (withFees) {
-          // 「ゲーム代あり」表示の場合:
-          // 既にゲーム代が引かれた後の収支なので、そのまま返す
-          return net;
-        } else {
-          // 「ゲーム代なし」表示の場合:
-          // もしゲーム代がなかったら、という仮の収支を計算するため、
-          // 保存されているゲーム代やトップ賞、セットの場代を純収支に「足し戻す」
-          const totalGames = Object.values(s.counts).reduce(
-            (sum, count) => sum + (count || 0),
-            0,
-          );
-          const fees =
-            totalGames * (s.gameFee || 0) +
-            (s.counts[1] || 0) * (s.topPrize || 0);
-          
-          const venueFee = s.venueFee || 0;
-
-          return net + fees + venueFee;
-        }
+        if (!withFees || (!s.gameFee && !s.topPrize)) return net;
+        const total = [1, 2, 3, 4]
+          .filter((p) => p <= (s.players || 4))
+          .reduce((sum, p) => sum + (s.counts[p] || 0), 0);
+        return (
+          net -
+          total * (s.gameFee || 0) -
+          (s.counts[1] || 0) * (s.topPrize || 0)
+        );
       }
 
       function renderHistory() {
@@ -2227,16 +2143,19 @@
         });
         shopFilter.value = currentShop;
 
-        if (anPlayers !== "all") rawAll = rawAll.filter((s) => s.players == anPlayers);
-        if (anGt !== "all") rawAll = rawAll.filter((s) => (s.gameType || "free") === anGt);
+        if (anPlayers !== "all")
+          rawAll = rawAll.filter((s) => s.players == anPlayers);
+        if (anGt !== "all")
+          rawAll = rawAll.filter((s) => (s.gameType || "free") === anGt);
         if (anShop !== "all") rawAll = rawAll.filter((s) => s.shop === anShop);
         if (anRate !== "all") rawAll = rawAll.filter((s) => s.rule == anRate);
         if (startDate) rawAll = rawAll.filter((s) => s.date >= startDate);
         if (endDate) rawAll = rawAll.filter((s) => s.date <= endDate);
 
-        // これから描画に使うデータセット `all` を作成する。
-        // 各セッションの `net` プロパティを、フィルター条件に従った収支で上書きする。
-        const all = rawAll.map(s => ({ ...s, net: getNet(s, withFees) }));
+        const all = withFees
+          ? rawAll.map((s) => ({ ...s, net: getNet(s, true) }))
+          : rawAll;
+        renderAvgRank(all);
         renderLineChart(all);
         renderDist(
           all.filter((s) => s.players === 4),
@@ -2399,6 +2318,38 @@
     </div>`;
           })
           .join("");
+      }
+
+      function renderAvgRank(sessions) {
+        const el = document.getElementById("an-avg-rank");
+        const calc = (data) => {
+          let games = 0, sum = 0;
+          data.forEach((s) => {
+            for (let p = 1; p <= s.players; p++) {
+              const c = s.counts[p] || 0;
+              games += c;
+              sum += p * c;
+            }
+          });
+          return { games, avg: games ? (sum / games).toFixed(2) : null };
+        };
+        const r4 = calc(sessions.filter((s) => s.players === 4));
+        const r3 = calc(sessions.filter((s) => s.players === 3));
+        if (!r4.games && !r3.games) {
+          el.innerHTML = '<div style="color:#ccc;font-size:0.78rem;">データなし</div>';
+          return;
+        }
+        let html = "";
+        if (r4.games) {
+          html += `<div class="kv"><span>四麻 平均着順</span><span class="v">${r4.avg}</span></div>`;
+          html += `<div class="kv"><span>四麻 対局数</span><span class="v">${r4.games}局</span></div>`;
+        }
+        if (r3.games) {
+          if (r4.games) html += '<div style="border-top:1px solid rgba(26,18,8,0.1);margin:6px 0"></div>';
+          html += `<div class="kv"><span>三麻 平均着順</span><span class="v">${r3.avg}</span></div>`;
+          html += `<div class="kv"><span>三麻 対局数</span><span class="v">${r3.games}局</span></div>`;
+        }
+        el.innerHTML = html;
       }
 
       function renderBal(sessions) {

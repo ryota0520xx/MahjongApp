@@ -56,19 +56,19 @@ self.addEventListener('fetch', event => {
     return;
   }
 
-  // アプリ本体 → キャッシュ優先、なければネットワーク
+  // アプリ本体 → ネットワーク優先、失敗時はキャッシュ
   event.respondWith(
-    caches.match(event.request).then(cached => {
-      if (cached) return cached;
-      return fetch(event.request).then(response => {
-        // 正常なレスポンスのみキャッシュ
-        if (response && response.status === 200 && response.type === 'basic') {
-          const toCache = response.clone();
-          caches.open(CACHE_NAME).then(cache => cache.put(event.request, toCache));
-        }
-        return response;
-      }).catch(() => {
-        // オフライン時はindex.htmlを返す
+    fetch(event.request).then(response => {
+      // 正常なレスポンスをキャッシュに保存して返す
+      if (response && response.status === 200 && response.type === 'basic') {
+        const toCache = response.clone();
+        caches.open(CACHE_NAME).then(cache => cache.put(event.request, toCache));
+      }
+      return response;
+    }).catch(() => {
+      // オフライン時はキャッシュから返す
+      return caches.match(event.request).then(cached => {
+        if (cached) return cached;
         if (event.request.mode === 'navigate') {
           return caches.match('./index.html');
         }

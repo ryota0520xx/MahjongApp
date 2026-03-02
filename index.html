@@ -1,563 +1,1495 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ja">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>麻雀成績集計</title>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>麻雀成績集計</title>
 
-<!-- PWA 対応 -->
-<link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#1a1208">
-<meta name="mobile-web-app-capable" content="yes">
-<!-- iOS Safari 対応 -->
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="麻雀成績">
-<link rel="apple-touch-icon" href="icon-512.svg">
+    <!-- PWA 対応 -->
+    <link rel="manifest" href="manifest.json" />
+    <meta name="theme-color" content="#1a1208" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <!-- iOS Safari 対応 -->
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta
+      name="apple-mobile-web-app-status-bar-style"
+      content="black-translucent"
+    />
+    <meta name="apple-mobile-web-app-title" content="麻雀成績" />
+    <link rel="apple-touch-icon" href="icon-512.svg" />
 
-<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@300;400;500;700&family=Shippori+Mincho:wght@400;500;700&display=swap" rel="stylesheet">
-<style>
-:root {
-  --ink:#1a1208; --paper:#f5f0e8; --paper-dark:#ede7d9;
-  --red:#c0392b; --gold:#b8860b; --teal:#2c7873; --teal-l:#52ab98;
-  --cream:#faf7f0; --sh:rgba(26,18,8,0.15);
-  --c1:#c9a84c; --c2:#9ea3a8; --c3:#b87333; --c4:#888;
-}
-*{margin:0;padding:0;box-sizing:border-box;}
-body{font-family:'Noto Serif JP',serif;background:var(--paper);color:var(--ink);min-height:100vh;}
-body::before{content:'';position:fixed;inset:0;
-  background:repeating-linear-gradient(0deg,transparent,transparent 39px,rgba(26,18,8,0.05) 39px,rgba(26,18,8,0.05) 40px),
-             repeating-linear-gradient(90deg,transparent,transparent 39px,rgba(26,18,8,0.03) 39px,rgba(26,18,8,0.03) 40px);
-  pointer-events:none;z-index:0;}
-.wrap{position:relative;z-index:1;max-width:720px;margin:0 auto;padding:18px 12px 80px;}
+    <link
+      href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@300;400;500;700&family=Shippori+Mincho:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --ink: #1a1208;
+        --paper: #f5f0e8;
+        --paper-dark: #ede7d9;
+        --red: #c0392b;
+        --gold: #b8860b;
+        --teal: #2c7873;
+        --teal-l: #52ab98;
+        --cream: #faf7f0;
+        --sh: rgba(26, 18, 8, 0.15);
+        --c1: #c9a84c;
+        --c2: #9ea3a8;
+        --c3: #b87333;
+        --c4: #888;
+      }
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        font-family: "Noto Serif JP", serif;
+        background: var(--paper);
+        color: var(--ink);
+        min-height: 100vh;
+      }
+      body::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        background:
+          repeating-linear-gradient(
+            0deg,
+            transparent,
+            transparent 39px,
+            rgba(26, 18, 8, 0.05) 39px,
+            rgba(26, 18, 8, 0.05) 40px
+          ),
+          repeating-linear-gradient(
+            90deg,
+            transparent,
+            transparent 39px,
+            rgba(26, 18, 8, 0.03) 39px,
+            rgba(26, 18, 8, 0.03) 40px
+          );
+        pointer-events: none;
+        z-index: 0;
+      }
+      .wrap {
+        position: relative;
+        z-index: 1;
+        max-width: 720px;
+        margin: 0 auto;
+        padding: 18px 12px 80px;
+      }
 
-/* HEADER */
-header{text-align:center;padding:22px 0 18px;border-bottom:2px solid var(--ink);margin-bottom:20px;}
-header::after{content:'';display:block;height:1px;background:var(--ink);margin-top:3px;}
-.h-deco{font-size:1.1rem;letter-spacing:0.5em;opacity:0.4;margin-bottom:5px;}
-.h-title{font-family:'Shippori Mincho',serif;font-size:1.55rem;font-weight:700;letter-spacing:0.2em;}
+      /* HEADER */
+      header {
+        text-align: center;
+        padding: 22px 0 18px;
+        border-bottom: 2px solid var(--ink);
+        margin-bottom: 20px;
+      }
+      header::after {
+        content: "";
+        display: block;
+        height: 1px;
+        background: var(--ink);
+        margin-top: 3px;
+      }
+      .h-deco {
+        font-size: 1.1rem;
+        letter-spacing: 0.5em;
+        opacity: 0.4;
+        margin-bottom: 5px;
+      }
+      .h-title {
+        font-family: "Shippori Mincho", serif;
+        font-size: 1.55rem;
+        font-weight: 700;
+        letter-spacing: 0.2em;
+      }
 
-/* TABS */
-.tabs{display:flex;border-bottom:2px solid var(--ink);margin-bottom:20px;overflow-x:auto;}
-.tab{flex:1;min-width:60px;padding:9px 4px;background:none;border:none;font-family:'Noto Serif JP',serif;
-  font-size:0.78rem;letter-spacing:0.08em;cursor:pointer;color:#999;white-space:nowrap;
-  border-bottom:3px solid transparent;margin-bottom:-2px;transition:all 0.2s;}
-.tab.active{color:var(--ink);border-bottom-color:var(--red);font-weight:500;}
-.pane{display:none;}.pane.active{display:block;}
+      /* TABS */
+      .tabs {
+        display: flex;
+        border-bottom: 2px solid var(--ink);
+        margin-bottom: 20px;
+        overflow-x: auto;
+      }
+      .tab {
+        flex: 1;
+        min-width: 60px;
+        padding: 9px 4px;
+        background: none;
+        border: none;
+        font-family: "Noto Serif JP", serif;
+        font-size: 0.78rem;
+        letter-spacing: 0.08em;
+        cursor: pointer;
+        color: #999;
+        white-space: nowrap;
+        border-bottom: 3px solid transparent;
+        margin-bottom: -2px;
+        transition: all 0.2s;
+      }
+      .tab.active {
+        color: var(--ink);
+        border-bottom-color: var(--red);
+        font-weight: 500;
+      }
+      .pane {
+        display: none;
+      }
+      .pane.active {
+        display: block;
+      }
 
-/* TOP STATS */
-.top-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin-bottom:18px;}
-@media(max-width:440px){.top-stats{grid-template-columns:repeat(2,1fr);}}
-.ts{background:var(--cream);border:1px solid rgba(26,18,8,0.14);border-radius:2px;padding:11px 8px;text-align:center;box-shadow:2px 2px 0 var(--sh);}
-.ts-l{font-size:0.64rem;letter-spacing:0.14em;color:#aaa;margin-bottom:3px;}
-.ts-v{font-family:'Shippori Mincho',serif;font-size:1.3rem;font-weight:700;}
-.ts-v.pos{color:var(--teal);}.ts-v.neg{color:var(--red);}
+      /* TOP STATS */
+      .top-stats {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 9px;
+        margin-bottom: 18px;
+      }
+      @media (max-width: 440px) {
+        .top-stats {
+          grid-template-columns: repeat(2, 1fr);
+        }
+      }
+      .ts {
+        background: var(--cream);
+        border: 1px solid rgba(26, 18, 8, 0.14);
+        border-radius: 2px;
+        padding: 11px 8px;
+        text-align: center;
+        box-shadow: 2px 2px 0 var(--sh);
+      }
+      .ts-l {
+        font-size: 0.64rem;
+        letter-spacing: 0.14em;
+        color: #aaa;
+        margin-bottom: 3px;
+      }
+      .ts-v {
+        font-family: "Shippori Mincho", serif;
+        font-size: 1.3rem;
+        font-weight: 700;
+      }
+      .ts-v.pos {
+        color: var(--teal);
+      }
+      .ts-v.neg {
+        color: var(--red);
+      }
 
-/* PANEL */
-.panel{background:var(--cream);border:1px solid rgba(26,18,8,0.18);border-radius:2px;padding:18px;margin-bottom:16px;box-shadow:3px 3px 0 var(--sh);}
-.pt{font-family:'Shippori Mincho',serif;font-size:0.95rem;font-weight:700;letter-spacing:0.18em;margin-bottom:14px;padding-bottom:9px;border-bottom:1px solid rgba(26,18,8,0.12);display:flex;align-items:center;gap:7px;}
-.pt::before{content:'✦';color:var(--gold);font-size:0.72rem;}
+      /* PANEL */
+      .panel {
+        background: var(--cream);
+        border: 1px solid rgba(26, 18, 8, 0.18);
+        border-radius: 2px;
+        padding: 18px;
+        margin-bottom: 16px;
+        box-shadow: 3px 3px 0 var(--sh);
+      }
+      .pt {
+        font-family: "Shippori Mincho", serif;
+        font-size: 0.95rem;
+        font-weight: 700;
+        letter-spacing: 0.18em;
+        margin-bottom: 14px;
+        padding-bottom: 9px;
+        border-bottom: 1px solid rgba(26, 18, 8, 0.12);
+        display: flex;
+        align-items: center;
+        gap: 7px;
+      }
+      .pt::before {
+        content: "✦";
+        color: var(--gold);
+        font-size: 0.72rem;
+      }
 
-/* FORM ELEMENTS */
-.g2{display:grid;grid-template-columns:1fr 1fr;gap:11px;}
-.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:11px;}
-.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;}
-@media(max-width:440px){.g2{grid-template-columns:1fr;}.g3,.g4{grid-template-columns:1fr 1fr;}}
-.span2{grid-column:1/-1;}
-.fg{display:flex;flex-direction:column;gap:4px;min-width:0;}
-.fg label{font-size:0.68rem;letter-spacing:0.16em;color:#777;}
-.fg input,.fg select,.fg textarea{font-family:'Noto Serif JP',serif;font-size:0.9rem;padding:8px 10px;
-  border:1px solid rgba(26,18,8,0.22);border-radius:2px;background:var(--paper);color:var(--ink);outline:none;transition:border-color 0.2s;
-  width:100%;min-width:0;max-width:100%;}
-.fg input:focus,.fg select:focus,.fg textarea:focus{border-color:var(--teal);}
-.fg textarea{resize:vertical;min-height:52px;}
+      /* FORM ELEMENTS */
+      .g2 {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 11px;
+      }
+      .g3 {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 11px;
+      }
+      .g4 {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 8px;
+      }
+      @media (max-width: 440px) {
+        .g2 {
+          grid-template-columns: 1fr;
+        }
+        .g3,
+        .g4 {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+      .span2 {
+        grid-column: 1/-1;
+      }
+      .fg {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        min-width: 0;
+      }
+      .fg label {
+        font-size: 0.68rem;
+        letter-spacing: 0.16em;
+        color: #777;
+      }
+      .fg input,
+      .fg select,
+      .fg textarea {
+        font-family: "Noto Serif JP", serif;
+        font-size: 0.9rem;
+        padding: 8px 10px;
+        border: 1px solid rgba(26, 18, 8, 0.22);
+        border-radius: 2px;
+        background: var(--paper);
+        color: var(--ink);
+        outline: none;
+        transition: border-color 0.2s;
+        width: 100%;
+        min-width: 0;
+        max-width: 100%;
+        box-sizing: border-box;
+      }
+      .fg input:focus,
+      .fg select:focus,
+      .fg textarea:focus {
+        border-color: var(--teal);
+      }
+      .fg textarea {
+        resize: vertical;
+        min-height: 52px;
+      }
 
-/* BUTTONS */
-.btn-primary{width:100%;margin-top:12px;padding:11px;background:var(--ink);color:var(--paper);border:none;font-family:'Shippori Mincho',serif;font-size:0.95rem;font-weight:700;letter-spacing:0.22em;cursor:pointer;border-radius:2px;transition:background 0.2s;}
-.btn-primary:hover{background:var(--teal);}
-.btn-teal{background:var(--teal);color:#fff;border:none;font-family:'Shippori Mincho',serif;font-size:0.88rem;font-weight:700;letter-spacing:0.1em;padding:8px 16px;border-radius:2px;cursor:pointer;transition:background 0.2s;}
-.btn-teal:hover{background:var(--ink);}
-.btn-ghost{background:none;border:1px solid rgba(26,18,8,0.22);font-family:'Noto Serif JP',serif;font-size:0.8rem;padding:6px 12px;border-radius:2px;cursor:pointer;transition:all 0.2s;color:var(--ink);}
-.btn-ghost:hover{background:var(--paper-dark);}
-.btn-red{background:none;border:1px solid var(--red);color:var(--red);font-family:'Noto Serif JP',serif;font-size:0.8rem;padding:6px 12px;border-radius:2px;cursor:pointer;transition:all 0.2s;}
-.btn-red:hover{background:var(--red);color:#fff;}
+      /* BUTTONS */
+      .btn-primary {
+        width: 100%;
+        margin-top: 12px;
+        padding: 11px;
+        background: var(--ink);
+        color: var(--paper);
+        border: none;
+        font-family: "Shippori Mincho", serif;
+        font-size: 0.95rem;
+        font-weight: 700;
+        letter-spacing: 0.22em;
+        cursor: pointer;
+        border-radius: 2px;
+        transition: background 0.2s;
+      }
+      .btn-primary:hover {
+        background: var(--teal);
+      }
+      .btn-teal {
+        background: var(--teal);
+        color: #fff;
+        border: none;
+        font-family: "Shippori Mincho", serif;
+        font-size: 0.88rem;
+        font-weight: 700;
+        letter-spacing: 0.1em;
+        padding: 8px 16px;
+        border-radius: 2px;
+        cursor: pointer;
+        transition: background 0.2s;
+      }
+      .btn-teal:hover {
+        background: var(--ink);
+      }
+      .btn-ghost {
+        background: none;
+        border: 1px solid rgba(26, 18, 8, 0.22);
+        font-family: "Noto Serif JP", serif;
+        font-size: 0.8rem;
+        padding: 6px 12px;
+        border-radius: 2px;
+        cursor: pointer;
+        transition: all 0.2s;
+        color: var(--ink);
+      }
+      .btn-ghost:hover {
+        background: var(--paper-dark);
+      }
+      .btn-red {
+        background: none;
+        border: 1px solid var(--red);
+        color: var(--red);
+        font-family: "Noto Serif JP", serif;
+        font-size: 0.8rem;
+        padding: 6px 12px;
+        border-radius: 2px;
+        cursor: pointer;
+        transition: all 0.2s;
+      }
+      .btn-red:hover {
+        background: var(--red);
+        color: #fff;
+      }
 
-/* SESSION BAR */
-.sess-bar{background:var(--ink);color:var(--paper);border-radius:2px;padding:11px 15px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;}
-.sess-shop{font-family:'Shippori Mincho',serif;font-size:1rem;font-weight:700;letter-spacing:0.1em;}
-.sess-meta{font-size:0.68rem;opacity:0.6;letter-spacing:0.1em;margin-top:2px;}
-.btn-end{background:none;border:1px solid rgba(255,255,255,0.3);color:var(--paper);font-family:'Noto Serif JP',serif;font-size:0.72rem;letter-spacing:0.1em;padding:5px 12px;border-radius:2px;cursor:pointer;transition:background 0.2s;white-space:nowrap;}
-.btn-end:hover{background:rgba(255,255,255,0.12);}
+      /* SESSION BAR */
+      .sess-bar {
+        background: var(--ink);
+        color: var(--paper);
+        border-radius: 2px;
+        padding: 11px 15px;
+        margin-bottom: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+      .sess-shop {
+        font-family: "Shippori Mincho", serif;
+        font-size: 1rem;
+        font-weight: 700;
+        letter-spacing: 0.1em;
+      }
+      .sess-meta {
+        font-size: 0.68rem;
+        opacity: 0.6;
+        letter-spacing: 0.1em;
+        margin-top: 2px;
+      }
+      .btn-end {
+        background: none;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        color: var(--paper);
+        font-family: "Noto Serif JP", serif;
+        font-size: 0.72rem;
+        letter-spacing: 0.1em;
+        padding: 5px 12px;
+        border-radius: 2px;
+        cursor: pointer;
+        transition: background 0.2s;
+        white-space: nowrap;
+      }
+      .btn-end:hover {
+        background: rgba(255, 255, 255, 0.12);
+      }
 
-/* TOTAL BADGE */
-.total-row{display:flex;justify-content:center;margin-bottom:14px;}
-.total-badge{background:rgba(26,18,8,0.06);padding:5px 18px;border-radius:30px;font-size:0.8rem;letter-spacing:0.1em;color:#777;}
-.total-badge strong{font-family:'Shippori Mincho',serif;font-size:1.15rem;color:var(--ink);}
+      /* TOTAL BADGE */
+      .total-row {
+        display: flex;
+        justify-content: center;
+        margin-bottom: 14px;
+      }
+      .total-badge {
+        background: rgba(26, 18, 8, 0.06);
+        padding: 5px 18px;
+        border-radius: 30px;
+        font-size: 0.8rem;
+        letter-spacing: 0.1em;
+        color: #777;
+      }
+      .total-badge strong {
+        font-family: "Shippori Mincho", serif;
+        font-size: 1.15rem;
+        color: var(--ink);
+      }
 
-/* COUNTER GRID */
-.counter-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
-.counter-card{background:var(--paper);border:1px solid rgba(26,18,8,0.12);border-radius:2px;padding:18px 12px;display:flex;flex-direction:column;align-items:center;gap:12px;}
-.place-label{font-family:'Shippori Mincho',serif;font-size:0.95rem;font-weight:700;letter-spacing:0.18em;display:flex;align-items:center;gap:6px;}
-.place-dot{width:10px;height:10px;border-radius:50%;}
-.cnt-num{font-family:'Shippori Mincho',serif;font-size:3.2rem;font-weight:700;line-height:1;transition:transform 0.15s;}
-.cnt-num.pop{transform:scale(1.35);}
-.cnt-controls{display:flex;align-items:center;gap:10px;}
-.cnt-btn{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;
-  border:2px solid rgba(26,18,8,0.18);background:var(--cream);font-size:1.4rem;font-weight:700;cursor:pointer;
-  transition:all 0.15s;user-select:none;font-family:'Shippori Mincho',serif;-webkit-tap-highlight-color:transparent;}
-.cnt-btn:active{transform:scale(0.85);}
-.cnt-btn.plus:hover{background:var(--ink);color:var(--paper);border-color:var(--ink);}
-.cnt-btn.minus:hover{background:var(--red);color:#fff;border-color:var(--red);}
-.cnt-sub{font-size:0.68rem;color:#bbb;letter-spacing:0.1em;}
+      /* COUNTER GRID */
+      .counter-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+      }
+      .counter-card {
+        background: var(--paper);
+        border: 1px solid rgba(26, 18, 8, 0.12);
+        border-radius: 2px;
+        padding: 18px 12px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 12px;
+      }
+      .place-label {
+        font-family: "Shippori Mincho", serif;
+        font-size: 0.95rem;
+        font-weight: 700;
+        letter-spacing: 0.18em;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .place-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+      }
+      .cnt-num {
+        font-family: "Shippori Mincho", serif;
+        font-size: 3.2rem;
+        font-weight: 700;
+        line-height: 1;
+        transition: transform 0.15s;
+      }
+      .cnt-num.pop {
+        transform: scale(1.35);
+      }
+      .cnt-controls {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .cnt-btn {
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 2px solid rgba(26, 18, 8, 0.18);
+        background: var(--cream);
+        font-size: 1.4rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.15s;
+        user-select: none;
+        font-family: "Shippori Mincho", serif;
+        -webkit-tap-highlight-color: transparent;
+      }
+      .cnt-btn:active {
+        transform: scale(0.85);
+      }
+      .cnt-btn.plus:hover {
+        background: var(--ink);
+        color: var(--paper);
+        border-color: var(--ink);
+      }
+      .cnt-btn.minus:hover {
+        background: var(--red);
+        color: #fff;
+        border-color: var(--red);
+      }
+      .cnt-sub {
+        font-size: 0.68rem;
+        color: #bbb;
+        letter-spacing: 0.1em;
+      }
 
-/* CHIP */
-.chip-hint{font-size:0.7rem;color:var(--gold);letter-spacing:0.08em;margin-top:4px;}
-.save-summary{background:rgba(44,120,115,0.07);border-radius:2px;padding:10px 12px;font-size:0.78rem;color:var(--ink);line-height:1.8;margin-bottom:12px;}
+      /* CHIP */
+      .chip-hint {
+        font-size: 0.7rem;
+        color: var(--gold);
+        letter-spacing: 0.08em;
+        margin-top: 4px;
+      }
+      .save-summary {
+        background: rgba(44, 120, 115, 0.07);
+        border-radius: 2px;
+        padding: 10px 12px;
+        font-size: 0.78rem;
+        color: var(--ink);
+        line-height: 1.8;
+        margin-bottom: 12px;
+      }
 
-/* SAVE FORM */
-.save-row{display:flex;gap:9px;align-items:flex-end;}
-.save-row .fg{flex:1;}
+      /* SAVE FORM */
+      .save-row {
+        display: flex;
+        gap: 9px;
+        align-items: flex-end;
+      }
+      .save-row .fg {
+        flex: 1;
+      }
 
-/* HISTORY */
-.filter-bar{display:flex;gap:7px;margin-bottom:12px;flex-wrap:wrap;}
-.fsel{font-family:'Noto Serif JP',serif;font-size:0.76rem;padding:5px 7px;border:1px solid rgba(26,18,8,0.2);background:var(--cream);color:var(--ink);border-radius:2px;}
-.sess-item{background:var(--cream);border:1px solid rgba(26,18,8,0.14);border-radius:2px;margin-bottom:10px;box-shadow:2px 2px 0 var(--sh);animation:fadeIn 0.3s ease;}
-@keyframes fadeIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}}
-.sh{padding:11px 14px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid rgba(26,18,8,0.08);flex-wrap:wrap;gap:5px;}
-.sh-shop{font-family:'Shippori Mincho',serif;font-size:0.93rem;font-weight:700;}
-.sh-meta{font-size:0.68rem;color:#aaa;letter-spacing:0.07em;margin-top:1px;}
-.sh-right{display:flex;align-items:center;gap:10px;}
-.sh-bal{font-family:'Shippori Mincho',serif;font-size:1.15rem;font-weight:700;}
-.sh-bal.pos{color:var(--teal);}.sh-bal.neg{color:var(--red);}.sh-bal.zero{color:#aaa;}
-.btn-del{background:none;border:none;cursor:pointer;color:#ccc;font-size:0.88rem;padding:3px;transition:color 0.2s;}
-.btn-del:hover{color:var(--red);}
-.sb{padding:9px 14px 11px;display:flex;gap:12px;align-items:center;flex-wrap:wrap;}
-.pchip{display:flex;align-items:center;gap:4px;font-size:0.8rem;}
-.pdot{width:8px;height:8px;border-radius:50%;}
-.pnum{font-family:'Shippori Mincho',serif;font-size:1rem;font-weight:700;}
-.snote{font-size:0.7rem;color:#aaa;font-style:italic;margin-left:auto;}
-.stotal{font-size:0.68rem;color:#ccc;letter-spacing:0.07em;}
-.chip-badge{font-size:0.68rem;background:rgba(184,134,11,0.12);color:var(--gold);padding:2px 8px;border-radius:10px;letter-spacing:0.06em;}
+      /* HISTORY */
+      .filter-bar {
+        display: flex;
+        gap: 7px;
+        margin-bottom: 12px;
+        flex-wrap: wrap;
+      }
+      .fsel {
+        font-family: "Noto Serif JP", serif;
+        font-size: 0.76rem;
+        padding: 5px 7px;
+        border: 1px solid rgba(26, 18, 8, 0.2);
+        background: var(--cream);
+        color: var(--ink);
+        border-radius: 2px;
+      }
+      .sess-item {
+        background: var(--cream);
+        border: 1px solid rgba(26, 18, 8, 0.14);
+        border-radius: 2px;
+        margin-bottom: 10px;
+        box-shadow: 2px 2px 0 var(--sh);
+        animation: fadeIn 0.3s ease;
+      }
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(-4px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      .sh {
+        padding: 11px 14px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid rgba(26, 18, 8, 0.08);
+        flex-wrap: wrap;
+        gap: 5px;
+      }
+      .sh-shop {
+        font-family: "Shippori Mincho", serif;
+        font-size: 0.93rem;
+        font-weight: 700;
+      }
+      .sh-meta {
+        font-size: 0.68rem;
+        color: #aaa;
+        letter-spacing: 0.07em;
+        margin-top: 1px;
+      }
+      .sh-right {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .sh-bal {
+        font-family: "Shippori Mincho", serif;
+        font-size: 1.15rem;
+        font-weight: 700;
+      }
+      .sh-bal.pos {
+        color: var(--teal);
+      }
+      .sh-bal.neg {
+        color: var(--red);
+      }
+      .sh-bal.zero {
+        color: #aaa;
+      }
+      .btn-del {
+        background: none;
+        border: none;
+        cursor: pointer;
+        color: #ccc;
+        font-size: 0.88rem;
+        padding: 3px;
+        transition: color 0.2s;
+      }
+      .btn-del:hover {
+        color: var(--red);
+      }
+      .sb {
+        padding: 9px 14px 11px;
+        display: flex;
+        gap: 12px;
+        align-items: center;
+        flex-wrap: wrap;
+      }
+      .pchip {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        font-size: 0.8rem;
+      }
+      .pdot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+      }
+      .pnum {
+        font-family: "Shippori Mincho", serif;
+        font-size: 1rem;
+        font-weight: 700;
+      }
+      .snote {
+        font-size: 0.7rem;
+        color: #aaa;
+        font-style: italic;
+        margin-left: auto;
+      }
+      .stotal {
+        font-size: 0.68rem;
+        color: #ccc;
+        letter-spacing: 0.07em;
+      }
+      .chip-badge {
+        font-size: 0.68rem;
+        background: rgba(184, 134, 11, 0.12);
+        color: var(--gold);
+        padding: 2px 8px;
+        border-radius: 10px;
+        letter-spacing: 0.06em;
+      }
 
-/* ANALYSIS */
-.a-grid{display:grid;grid-template-columns:1fr 1fr;gap:13px;margin-bottom:13px;}
-@media(max-width:440px){.a-grid{grid-template-columns:1fr;}}
-.a-card{background:var(--cream);border:1px solid rgba(26,18,8,0.14);border-radius:2px;padding:15px;box-shadow:2px 2px 0 var(--sh);}
-.a-card h3{font-size:0.68rem;letter-spacing:0.18em;color:#aaa;margin-bottom:11px;padding-bottom:7px;border-bottom:1px solid rgba(26,18,8,0.08);}
-.bar-row{display:flex;align-items:center;gap:7px;margin-bottom:7px;}
-.bar-lbl{width:24px;font-family:'Shippori Mincho',serif;font-weight:700;font-size:0.82rem;}
-.bar-track{flex:1;height:11px;background:rgba(26,18,8,0.06);border-radius:1px;overflow:hidden;}
-.bar-fill{height:100%;border-radius:1px;transition:width 0.5s ease;}
-.bar-pct{font-size:0.7rem;color:#aaa;width:30px;text-align:right;}
-.bar-cnt{font-size:0.7rem;color:#ccc;width:22px;text-align:right;}
-.kv{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px;font-size:0.82rem;}
-.kv .v{font-family:'Shippori Mincho',serif;font-size:1rem;font-weight:700;}
-.kv .v.pos{color:var(--teal);}.kv .v.neg{color:var(--red);}
+      /* ANALYSIS */
+      .a-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 13px;
+        margin-bottom: 13px;
+      }
+      @media (max-width: 440px) {
+        .a-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+      .a-card {
+        background: var(--cream);
+        border: 1px solid rgba(26, 18, 8, 0.14);
+        border-radius: 2px;
+        padding: 15px;
+        box-shadow: 2px 2px 0 var(--sh);
+      }
+      .a-card h3 {
+        font-size: 0.68rem;
+        letter-spacing: 0.18em;
+        color: #aaa;
+        margin-bottom: 11px;
+        padding-bottom: 7px;
+        border-bottom: 1px solid rgba(26, 18, 8, 0.08);
+      }
+      .bar-row {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        margin-bottom: 7px;
+      }
+      .bar-lbl {
+        width: 24px;
+        font-family: "Shippori Mincho", serif;
+        font-weight: 700;
+        font-size: 0.82rem;
+      }
+      .bar-track {
+        flex: 1;
+        height: 11px;
+        background: rgba(26, 18, 8, 0.06);
+        border-radius: 1px;
+        overflow: hidden;
+      }
+      .bar-fill {
+        height: 100%;
+        border-radius: 1px;
+        transition: width 0.5s ease;
+      }
+      .bar-pct {
+        font-size: 0.7rem;
+        color: #aaa;
+        width: 30px;
+        text-align: right;
+      }
+      .bar-cnt {
+        font-size: 0.7rem;
+        color: #ccc;
+        width: 22px;
+        text-align: right;
+      }
+      .kv {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        margin-bottom: 6px;
+        font-size: 0.82rem;
+      }
+      .kv .v {
+        font-family: "Shippori Mincho", serif;
+        font-size: 1rem;
+        font-weight: 700;
+      }
+      .kv .v.pos {
+        color: var(--teal);
+      }
+      .kv .v.neg {
+        color: var(--red);
+      }
 
-/* LINE CHART */
-.line-chart-wrap{position:relative;width:100%;margin-top:6px;}
-.line-chart-wrap svg{width:100%;display:block;}
-.chart-zero{stroke:rgba(26,18,8,0.15);stroke-dasharray:3,3;}
-.chart-line{stroke:var(--teal);stroke-width:2.5;fill:none;stroke-linejoin:round;stroke-linecap:round;}
-.chart-area{fill:url(#cg);opacity:0.15;}
-.chart-dot{stroke:var(--cream);stroke-width:2;}
-.chart-dot.pos{fill:var(--teal);}
-.chart-dot.neg{fill:var(--red);}
-.chart-lbl{font-size:9px;fill:#aaa;font-family:'Noto Serif JP',serif;}
-.chart-val{font-size:8px;font-family:'Shippori Mincho',serif;font-weight:700;}
+      /* LINE CHART */
+      .line-chart-wrap {
+        position: relative;
+        width: 100%;
+        margin-top: 6px;
+      }
+      .line-chart-wrap svg {
+        width: 100%;
+        display: block;
+      }
+      .chart-zero {
+        stroke: rgba(26, 18, 8, 0.15);
+        stroke-dasharray: 3, 3;
+      }
+      .chart-line {
+        stroke: var(--teal);
+        stroke-width: 2.5;
+        fill: none;
+        stroke-linejoin: round;
+        stroke-linecap: round;
+      }
+      .chart-area {
+        fill: url(#cg);
+        opacity: 0.15;
+      }
+      .chart-dot {
+        stroke: var(--cream);
+        stroke-width: 2;
+      }
+      .chart-dot.pos {
+        fill: var(--teal);
+      }
+      .chart-dot.neg {
+        fill: var(--red);
+      }
+      .chart-lbl {
+        font-size: 9px;
+        fill: #aaa;
+        font-family: "Noto Serif JP", serif;
+      }
+      .chart-val {
+        font-size: 8px;
+        font-family: "Shippori Mincho", serif;
+        font-weight: 700;
+      }
 
-/* MONTHLY */
-.monthly-wrap{display:flex;align-items:flex-end;gap:3px;height:68px;margin-top:8px;}
-.m-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;}
-.m-bar{width:100%;border-radius:1px 1px 0 0;min-height:2px;}
-.m-bar.pos{background:var(--teal-l);}.m-bar.neg{background:var(--red);}
-.m-lbl{font-size:0.56rem;color:#bbb;}
+      /* MONTHLY */
+      .monthly-wrap {
+        display: flex;
+        align-items: flex-end;
+        gap: 3px;
+        height: 68px;
+        margin-top: 8px;
+      }
+      .m-col {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 2px;
+      }
+      .m-bar {
+        width: 100%;
+        border-radius: 1px 1px 0 0;
+        min-height: 2px;
+      }
+      .m-bar.pos {
+        background: var(--teal-l);
+      }
+      .m-bar.neg {
+        background: var(--red);
+      }
+      .m-lbl {
+        font-size: 0.56rem;
+        color: #bbb;
+      }
 
-/* SHOP LIST */
-.shop-card{background:var(--paper);border:1px solid rgba(26,18,8,0.15);border-radius:2px;padding:13px 14px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:flex-start;gap:10px;}
-.sc-name{font-family:'Shippori Mincho',serif;font-size:0.95rem;font-weight:700;margin-bottom:3px;}
-.sc-detail{font-size:0.7rem;color:#999;letter-spacing:0.07em;line-height:1.7;}
-.sc-actions{display:flex;gap:6px;flex-shrink:0;}
-.section-lbl{font-size:0.66rem;letter-spacing:0.18em;color:#aaa;display:block;margin:12px 0 8px;}
-.uma-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px;}
-@media(max-width:440px){.uma-grid{grid-template-columns:repeat(2,1fr);}}
-.uma-fg label{font-size:0.65rem;color:var(--gold);}
-.uma-fg input{border-color:rgba(184,134,11,0.3);text-align:center;}
-.uma-fg input:focus{border-color:var(--gold);}
-hr.div{border:none;border-top:1px solid rgba(26,18,8,0.1);margin:14px 0;}
+      /* SHOP LIST */
+      .shop-card {
+        background: var(--paper);
+        border: 1px solid rgba(26, 18, 8, 0.15);
+        border-radius: 2px;
+        padding: 13px 14px;
+        margin-bottom: 10px;
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 10px;
+      }
+      .sc-name {
+        font-family: "Shippori Mincho", serif;
+        font-size: 0.95rem;
+        font-weight: 700;
+        margin-bottom: 3px;
+      }
+      .sc-detail {
+        font-size: 0.7rem;
+        color: #999;
+        letter-spacing: 0.07em;
+        line-height: 1.7;
+      }
+      .sc-actions {
+        display: flex;
+        gap: 6px;
+        flex-shrink: 0;
+      }
+      .section-lbl {
+        font-size: 0.66rem;
+        letter-spacing: 0.18em;
+        color: #aaa;
+        display: block;
+        margin: 12px 0 8px;
+      }
+      .uma-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 8px;
+        margin-bottom: 14px;
+      }
+      @media (max-width: 440px) {
+        .uma-grid {
+          grid-template-columns: repeat(2, 1fr);
+        }
+      }
+      .uma-fg label {
+        font-size: 0.65rem;
+        color: var(--gold);
+      }
+      .uma-fg input {
+        border-color: rgba(184, 134, 11, 0.3);
+        text-align: center;
+      }
+      .uma-fg input:focus {
+        border-color: var(--gold);
+      }
+      hr.div {
+        border: none;
+        border-top: 1px solid rgba(26, 18, 8, 0.1);
+        margin: 14px 0;
+      }
 
-/* DATA TAB */
-.data-btn-row{display:flex;gap:9px;flex-wrap:wrap;margin-top:10px;}
-.btn-export{flex:1;min-width:110px;padding:10px 12px;border:2px solid var(--ink);background:var(--paper);font-family:'Shippori Mincho',serif;font-size:0.86rem;font-weight:700;letter-spacing:0.12em;cursor:pointer;border-radius:2px;transition:all 0.2s;display:flex;align-items:center;justify-content:center;gap:5px;}
-.btn-export:hover{background:var(--ink);color:var(--paper);}
-.btn-export.teal{border-color:var(--teal);color:var(--teal);}
-.btn-export.teal:hover{background:var(--teal);color:#fff;}
-.btn-export.red{border-color:var(--red);color:var(--red);}
-.btn-export.red:hover{background:var(--red);color:#fff;}
-.import-area{margin-top:12px;padding:22px;border:2px dashed rgba(26,18,8,0.18);border-radius:2px;background:var(--paper);text-align:center;cursor:pointer;transition:border-color 0.2s;}
-.import-area:hover,.import-area.drag{border-color:var(--teal);}
-.import-lbl{font-size:0.8rem;color:#aaa;letter-spacing:0.1em;line-height:1.8;}
-.import-lbl strong{color:var(--ink);font-size:0.9rem;display:block;margin-bottom:3px;}
-#file-input{display:none;}
-.data-note{font-size:0.7rem;color:#bbb;letter-spacing:0.08em;margin-top:7px;line-height:1.7;}
+      /* DATA TAB */
+      .data-btn-row {
+        display: flex;
+        gap: 9px;
+        flex-wrap: wrap;
+        margin-top: 10px;
+      }
+      .btn-export {
+        flex: 1;
+        min-width: 110px;
+        padding: 10px 12px;
+        border: 2px solid var(--ink);
+        background: var(--paper);
+        font-family: "Shippori Mincho", serif;
+        font-size: 0.86rem;
+        font-weight: 700;
+        letter-spacing: 0.12em;
+        cursor: pointer;
+        border-radius: 2px;
+        transition: all 0.2s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 5px;
+      }
+      .btn-export:hover {
+        background: var(--ink);
+        color: var(--paper);
+      }
+      .btn-export.teal {
+        border-color: var(--teal);
+        color: var(--teal);
+      }
+      .btn-export.teal:hover {
+        background: var(--teal);
+        color: #fff;
+      }
+      .btn-export.red {
+        border-color: var(--red);
+        color: var(--red);
+      }
+      .btn-export.red:hover {
+        background: var(--red);
+        color: #fff;
+      }
+      .import-area {
+        margin-top: 12px;
+        padding: 22px;
+        border: 2px dashed rgba(26, 18, 8, 0.18);
+        border-radius: 2px;
+        background: var(--paper);
+        text-align: center;
+        cursor: pointer;
+        transition: border-color 0.2s;
+      }
+      .import-area:hover,
+      .import-area.drag {
+        border-color: var(--teal);
+      }
+      .import-lbl {
+        font-size: 0.8rem;
+        color: #aaa;
+        letter-spacing: 0.1em;
+        line-height: 1.8;
+      }
+      .import-lbl strong {
+        color: var(--ink);
+        font-size: 0.9rem;
+        display: block;
+        margin-bottom: 3px;
+      }
+      #file-input {
+        display: none;
+      }
+      .data-note {
+        font-size: 0.7rem;
+        color: #bbb;
+        letter-spacing: 0.08em;
+        margin-top: 7px;
+        line-height: 1.7;
+      }
 
-/* TOAST */
-.toast{position:fixed;bottom:26px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--ink);color:var(--paper);padding:9px 20px;border-radius:2px;font-size:0.8rem;letter-spacing:0.1em;opacity:0;transition:all 0.3s;pointer-events:none;z-index:999;white-space:nowrap;}
-.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+      /* TOAST */
+      .toast {
+        position: fixed;
+        bottom: 26px;
+        left: 50%;
+        transform: translateX(-50%) translateY(20px);
+        background: var(--ink);
+        color: var(--paper);
+        padding: 9px 20px;
+        border-radius: 2px;
+        font-size: 0.8rem;
+        letter-spacing: 0.1em;
+        opacity: 0;
+        transition: all 0.3s;
+        pointer-events: none;
+        z-index: 999;
+        white-space: nowrap;
+      }
+      .toast.show {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+      }
 
-.empty{text-align:center;padding:38px;color:#ccc;font-size:0.86rem;letter-spacing:0.14em;}
-.empty span{font-size:1.9rem;display:block;margin-bottom:9px;opacity:0.3;}
+      .empty {
+        text-align: center;
+        padding: 38px;
+        color: #ccc;
+        font-size: 0.86rem;
+        letter-spacing: 0.14em;
+      }
+      .empty span {
+        font-size: 1.9rem;
+        display: block;
+        margin-bottom: 9px;
+        opacity: 0.3;
+      }
 
-::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:var(--paper-dark)}::-webkit-scrollbar-thumb{background:rgba(26,18,8,0.22);border-radius:3px}
-</style>
-</head>
-<body>
-<div class="wrap">
+      ::-webkit-scrollbar {
+        width: 5px;
+      }
+      ::-webkit-scrollbar-track {
+        background: var(--paper-dark);
+      }
+      ::-webkit-scrollbar-thumb {
+        background: rgba(26, 18, 8, 0.22);
+        border-radius: 3px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <header>
+        <div class="h-deco">🀇 🀙 🀄</div>
+        <div class="h-title">麻雀成績集計</div>
+      </header>
 
-<header>
-  <div class="h-deco">🀇 🀙 🀄</div>
-  <div class="h-title">麻雀成績集計</div>
-</header>
-
-<!-- TOP STATS -->
-<div class="top-stats">
-  <div class="ts"><div class="ts-l">総対局数</div><div class="ts-v" id="tsGames">0</div></div>
-  <div class="ts"><div class="ts-l">平均着順</div><div class="ts-v" id="tsAvg">—</div></div>
-  <div class="ts"><div class="ts-l">1着率</div><div class="ts-v" id="tsFirst">—</div></div>
-  <div class="ts"><div class="ts-l">累計純収支</div><div class="ts-v" id="tsBal">¥0</div></div>
-</div>
-
-<div class="tabs">
-  <button class="tab active" data-tab="record">記録する</button>
-  <button class="tab" data-tab="history">戦績一覧</button>
-  <button class="tab" data-tab="analysis">分析</button>
-  <button class="tab" data-tab="shops">店舗設定</button>
-  <button class="tab" data-tab="data">データ</button>
-</div>
-
-<!-- ===== RECORD ===== -->
-<div class="pane active" id="pane-record">
-
-  <div id="setup-section">
-    <div class="panel">
-      <div class="pt">店舗・ルール設定</div>
-      <div class="g2" style="margin-bottom:11px;">
-        <div class="fg">
-          <label>日付</label>
-          <input type="date" id="s-date">
+      <!-- TOP STATS -->
+      <div class="top-stats">
+        <div class="ts">
+          <div class="ts-l">総対局数</div>
+          <div class="ts-v" id="tsGames">0</div>
         </div>
-        <div class="fg">
-          <label>登録店舗から選ぶ（任意）</label>
-          <select id="s-shop-preset" onchange="applyShopPreset()">
-            <option value="">── 手動入力 ──</option>
+        <div class="ts">
+          <div class="ts-l">平均着順</div>
+          <div class="ts-v" id="tsAvg">—</div>
+        </div>
+        <div class="ts">
+          <div class="ts-l">1着率</div>
+          <div class="ts-v" id="tsFirst">—</div>
+        </div>
+        <div class="ts">
+          <div class="ts-l">累計純収支</div>
+          <div class="ts-v" id="tsBal">¥0</div>
+        </div>
+      </div>
+
+      <div class="tabs">
+        <button class="tab active" data-tab="record">記録する</button>
+        <button class="tab" data-tab="history">戦績一覧</button>
+        <button class="tab" data-tab="analysis">分析</button>
+        <button class="tab" data-tab="shops">店舗設定</button>
+        <button class="tab" data-tab="data">データ</button>
+      </div>
+
+      <!-- ===== RECORD ===== -->
+      <div class="pane active" id="pane-record">
+        <div id="setup-section">
+          <div class="panel">
+            <div class="pt">店舗・ルール設定</div>
+            <div class="g2" style="margin-bottom: 11px">
+              <div class="fg">
+                <label>日付</label>
+                <input type="date" id="s-date" />
+              </div>
+              <div class="fg">
+                <label>登録店舗から選ぶ（任意）</label>
+                <select id="s-shop-preset" onchange="applyShopPreset()">
+                  <option value="">── 手動入力 ──</option>
+                </select>
+              </div>
+            </div>
+            <div class="g2" style="margin-bottom: 11px">
+              <div class="fg">
+                <label>店舗名</label>
+                <input type="text" id="s-shop" placeholder="例：○○雀荘" />
+              </div>
+              <div class="fg">
+                <label>レート・メモ（任意）</label>
+                <input type="text" id="s-rule" placeholder="例：0.5点5円" />
+              </div>
+            </div>
+            <div class="g2">
+              <div class="fg">
+                <label>人数</label>
+                <select id="s-players">
+                  <option value="4">四人麻雀</option>
+                  <option value="3">三人麻雀</option>
+                </select>
+              </div>
+              <div class="fg">
+                <label>戦型</label>
+                <select id="s-format">
+                  <option value="東南戦">東南戦</option>
+                  <option value="東風戦">東風戦</option>
+                  <option value="一荘戦">一荘戦</option>
+                </select>
+              </div>
+            </div>
+            <button class="btn-primary" onclick="startSession()">
+              セッション開始 ▶
+            </button>
+          </div>
+        </div>
+
+        <div id="session-section" style="display: none">
+          <div class="sess-bar">
+            <div>
+              <div class="sess-shop" id="sess-shop">—</div>
+              <div class="sess-meta" id="sess-meta">—</div>
+            </div>
+            <button class="btn-end" onclick="confirmEnd()">終了・破棄</button>
+          </div>
+
+          <div class="panel" style="margin-bottom: 14px">
+            <div class="pt">着順カウンター</div>
+            <div class="total-row">
+              <div class="total-badge">
+                本日 <strong id="cur-total">0</strong> 局
+              </div>
+            </div>
+            <div class="counter-grid" id="counter-grid"></div>
+          </div>
+
+          <div class="panel">
+            <div class="pt">収支・チップを入力して保存</div>
+            <div class="g2" style="margin-bottom: 11px">
+              <div class="fg">
+                <label>現金収支（円）</label>
+                <input
+                  type="number"
+                  id="s-balance"
+                  placeholder="+3000 or −2000"
+                  oninput="updateSaveSummary()"
+                />
+              </div>
+              <div class="fg" id="chip-input-wrap" style="display: none">
+                <label>チップ枚数（±）</label>
+                <input
+                  type="number"
+                  id="s-chips"
+                  placeholder="+5 or −3"
+                  oninput="updateChipCalc()"
+                />
+                <div class="chip-hint" id="chip-calc"></div>
+              </div>
+            </div>
+            <div class="fg" style="margin-bottom: 12px">
+              <label>メモ（任意）</label>
+              <input
+                type="text"
+                id="s-note"
+                placeholder="例：跳満ツモで逆転1着など"
+              />
+            </div>
+            <div
+              id="save-summary"
+              class="save-summary"
+              style="display: none"
+            ></div>
+            <button
+              class="btn-teal"
+              style="width: 100%; padding: 11px"
+              onclick="saveSession()"
+            >
+              保存する ✦
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== HISTORY ===== -->
+      <div class="pane" id="pane-history">
+        <div class="filter-bar">
+          <select class="fsel" id="f-players" onchange="renderHistory()">
+            <option value="all">全人数</option>
+            <option value="4">四人</option>
+            <option value="3">三人</option>
+          </select>
+          <select class="fsel" id="f-sort" onchange="renderHistory()">
+            <option value="new">新しい順</option>
+            <option value="old">古い順</option>
+            <option value="balH">収支高い順</option>
+            <option value="balL">収支低い順</option>
           </select>
         </div>
+        <div id="history-list"></div>
       </div>
-      <div class="g2" style="margin-bottom:11px;">
-        <div class="fg">
-          <label>店舗名</label>
-          <input type="text" id="s-shop" placeholder="例：○○雀荘">
-        </div>
-        <div class="fg">
-          <label>レート・メモ（任意）</label>
-          <input type="text" id="s-rule" placeholder="例：0.5点5円">
-        </div>
-      </div>
-      <div class="g2">
-        <div class="fg">
-          <label>人数</label>
-          <select id="s-players">
-            <option value="4">四人麻雀</option>
-            <option value="3">三人麻雀</option>
-          </select>
-        </div>
-        <div class="fg">
-          <label>戦型</label>
-          <select id="s-format">
-            <option value="東南戦">東南戦</option>
-            <option value="東風戦">東風戦</option>
-            <option value="一荘戦">一荘戦</option>
-          </select>
-        </div>
-      </div>
-      <button class="btn-primary" onclick="startSession()">セッション開始 ▶</button>
-    </div>
-  </div>
 
-  <div id="session-section" style="display:none">
-    <div class="sess-bar">
-      <div>
-        <div class="sess-shop" id="sess-shop">—</div>
-        <div class="sess-meta" id="sess-meta">—</div>
-      </div>
-      <button class="btn-end" onclick="confirmEnd()">終了・破棄</button>
-    </div>
-
-    <div class="panel" style="margin-bottom:14px;">
-      <div class="pt">着順カウンター</div>
-      <div class="total-row">
-        <div class="total-badge">本日 <strong id="cur-total">0</strong> 局</div>
-      </div>
-      <div class="counter-grid" id="counter-grid"></div>
-    </div>
-
-    <div class="panel">
-      <div class="pt">収支・チップを入力して保存</div>
-      <div class="g2" style="margin-bottom:11px;">
-        <div class="fg">
-          <label>現金収支（円）</label>
-          <input type="number" id="s-balance" placeholder="+3000 or −2000" oninput="updateSaveSummary()">
+      <!-- ===== ANALYSIS ===== -->
+      <div class="pane" id="pane-analysis">
+        <div class="a-card" style="margin-bottom: 13px">
+          <h3>累計純収支の推移</h3>
+          <div class="line-chart-wrap" id="an-line"></div>
         </div>
-        <div class="fg" id="chip-input-wrap" style="display:none">
-          <label>チップ枚数（±）</label>
-          <input type="number" id="s-chips" placeholder="+5 or −3" oninput="updateChipCalc()">
-          <div class="chip-hint" id="chip-calc"></div>
+        <div class="a-grid">
+          <div class="a-card">
+            <h3>着順分布（四人）</h3>
+            <div id="an-dist4"></div>
+          </div>
+          <div class="a-card">
+            <h3>着順分布（三人）</h3>
+            <div id="an-dist3"></div>
+          </div>
+        </div>
+        <div class="a-grid">
+          <div class="a-card">
+            <h3>収支サマリー</h3>
+            <div id="an-bal"></div>
+          </div>
+          <div class="a-card">
+            <h3>月別収支（直近6ヶ月）</h3>
+            <div id="an-monthly"></div>
+          </div>
+        </div>
+        <div class="a-card" style="margin-bottom: 13px">
+          <h3>店舗別成績</h3>
+          <div id="an-shop"></div>
         </div>
       </div>
-      <div class="fg" style="margin-bottom:12px;">
-        <label>メモ（任意）</label>
-        <input type="text" id="s-note" placeholder="例：跳満ツモで逆転1着など">
+
+      <!-- ===== SHOPS ===== -->
+      <div class="pane" id="pane-shops">
+        <div class="panel">
+          <div class="pt">登録済み店舗</div>
+          <div id="shop-list"></div>
+          <button class="btn-primary" onclick="showShopForm()">
+            ＋ 新しい店舗を追加
+          </button>
+        </div>
+
+        <div class="panel" id="shop-form-panel" style="display: none">
+          <div class="pt"><span id="shop-form-title">店舗を追加</span></div>
+          <div class="g2" style="margin-bottom: 11px">
+            <div class="fg span2">
+              <label>店舗名 *</label>
+              <input type="text" id="sf-name" placeholder="例：○○雀荘" />
+            </div>
+          </div>
+          <div class="g2" style="margin-bottom: 11px">
+            <div class="fg">
+              <label>デフォルト人数</label>
+              <select id="sf-players">
+                <option value="4">四人麻雀</option>
+                <option value="3">三人麻雀</option>
+              </select>
+            </div>
+            <div class="fg">
+              <label>デフォルト戦型</label>
+              <select id="sf-format">
+                <option value="東南戦">東南戦</option>
+                <option value="東風戦">東風戦</option>
+                <option value="一荘戦">一荘戦</option>
+              </select>
+            </div>
+          </div>
+          <div class="fg" style="margin-bottom: 4px">
+            <label>レート・その他メモ（任意）</label>
+            <input
+              type="text"
+              id="sf-rule"
+              placeholder="例：0.5点5円、ハコ1000点"
+            />
+          </div>
+
+          <hr class="div" />
+          <span class="section-lbl">ウマ設定（任意）</span>
+          <div class="uma-grid">
+            <div class="fg uma-fg">
+              <label>1着</label
+              ><input type="number" id="sf-u1" placeholder="+10" />
+            </div>
+            <div class="fg uma-fg">
+              <label>2着</label
+              ><input type="number" id="sf-u2" placeholder="+5" />
+            </div>
+            <div class="fg uma-fg">
+              <label>3着</label
+              ><input type="number" id="sf-u3" placeholder="−5" />
+            </div>
+            <div class="fg uma-fg" id="sf-u4-wrap">
+              <label>4着</label
+              ><input type="number" id="sf-u4" placeholder="−10" />
+            </div>
+          </div>
+
+          <hr class="div" />
+          <span class="section-lbl">チップ設定（任意）</span>
+          <div class="g2" style="margin-bottom: 14px">
+            <div class="fg">
+              <label>チップ単価（円/枚）</label>
+              <input type="number" id="sf-chip-unit" placeholder="例：500" />
+            </div>
+            <div class="fg">
+              <label>チップ種別メモ</label>
+              <input type="text" id="sf-chip-note" placeholder="例：赤チップ" />
+            </div>
+          </div>
+
+          <div style="display: flex; gap: 9px">
+            <button
+              class="btn-teal"
+              style="flex: 1; padding: 10px"
+              onclick="saveShop()"
+            >
+              保存
+            </button>
+            <button class="btn-ghost" onclick="cancelShopForm()">
+              キャンセル
+            </button>
+          </div>
+          <input type="hidden" id="sf-editing-id" value="" />
+        </div>
       </div>
-      <div id="save-summary" class="save-summary" style="display:none"></div>
-      <button class="btn-teal" style="width:100%;padding:11px;" onclick="saveSession()">保存する ✦</button>
-    </div>
-  </div>
-</div>
 
-<!-- ===== HISTORY ===== -->
-<div class="pane" id="pane-history">
-  <div class="filter-bar">
-    <select class="fsel" id="f-players" onchange="renderHistory()">
-      <option value="all">全人数</option>
-      <option value="4">四人</option>
-      <option value="3">三人</option>
-    </select>
-    <select class="fsel" id="f-sort" onchange="renderHistory()">
-      <option value="new">新しい順</option>
-      <option value="old">古い順</option>
-      <option value="balH">収支高い順</option>
-      <option value="balL">収支低い順</option>
-    </select>
-  </div>
-  <div id="history-list"></div>
-</div>
-
-<!-- ===== ANALYSIS ===== -->
-<div class="pane" id="pane-analysis">
-  <div class="a-card" style="margin-bottom:13px;">
-    <h3>累計純収支の推移</h3>
-    <div class="line-chart-wrap" id="an-line"></div>
-  </div>
-  <div class="a-grid">
-    <div class="a-card"><h3>着順分布（四人）</h3><div id="an-dist4"></div></div>
-    <div class="a-card"><h3>着順分布（三人）</h3><div id="an-dist3"></div></div>
-  </div>
-  <div class="a-grid">
-    <div class="a-card"><h3>収支サマリー</h3><div id="an-bal"></div></div>
-    <div class="a-card"><h3>月別収支（直近6ヶ月）</h3><div id="an-monthly"></div></div>
-  </div>
-  <div class="a-card" style="margin-bottom:13px;"><h3>店舗別成績</h3><div id="an-shop"></div></div>
-</div>
-
-<!-- ===== SHOPS ===== -->
-<div class="pane" id="pane-shops">
-  <div class="panel">
-    <div class="pt">登録済み店舗</div>
-    <div id="shop-list"></div>
-    <button class="btn-primary" onclick="showShopForm()">＋ 新しい店舗を追加</button>
-  </div>
-
-  <div class="panel" id="shop-form-panel" style="display:none">
-    <div class="pt"><span id="shop-form-title">店舗を追加</span></div>
-    <div class="g2" style="margin-bottom:11px;">
-      <div class="fg span2">
-        <label>店舗名 *</label>
-        <input type="text" id="sf-name" placeholder="例：○○雀荘">
+      <!-- ===== DATA ===== -->
+      <div class="pane" id="pane-data">
+        <div class="panel">
+          <div class="pt">エクスポート</div>
+          <p class="data-note">
+            記録したデータをファイルとして保存します。定期的なバックアップを推奨します。
+          </p>
+          <div class="data-btn-row">
+            <button class="btn-export teal" onclick="exportJSON()">
+              📄 JSON（バックアップ）
+            </button>
+            <button class="btn-export" onclick="exportCSV()">
+              📊 CSV（Excel用）
+            </button>
+          </div>
+          <p class="data-note" style="margin-top: 6px">
+            JSON → 再インポートして復元可能 ／ CSV → スプレッドシートで開けます
+          </p>
+        </div>
+        <div class="panel">
+          <div class="pt">インポート（復元）</div>
+          <div
+            class="import-area"
+            id="drop-zone"
+            onclick="document.getElementById('file-input').click()"
+          >
+            <input
+              type="file"
+              id="file-input"
+              accept=".json"
+              onchange="importJSON(event)"
+            />
+            <div class="import-lbl">
+              <strong>📂 ファイルを選択 / ここにドロップ</strong>.json
+              ファイルのみ対応
+            </div>
+          </div>
+          <p class="data-note" style="margin-top: 8px; color: var(--red)">
+            ⚠️ インポートは現在のデータへの追加です（上書きではありません）
+          </p>
+        </div>
+        <div class="panel">
+          <div class="pt">データ管理</div>
+          <p class="data-note">
+            現在の記録数：<strong id="data-count" style="color: var(--ink)"
+              >0</strong
+            >
+            セッション
+          </p>
+          <div class="data-btn-row">
+            <button class="btn-export red" onclick="clearAll()">
+              🗑️ すべてのデータを削除
+            </button>
+          </div>
+          <p class="data-note" style="margin-top: 7px; color: var(--red)">
+            ⚠️ 削除は元に戻せません。事前にエクスポート推奨。
+          </p>
+        </div>
       </div>
     </div>
-    <div class="g2" style="margin-bottom:11px;">
-      <div class="fg">
-        <label>デフォルト人数</label>
-        <select id="sf-players">
-          <option value="4">四人麻雀</option>
-          <option value="3">三人麻雀</option>
-        </select>
-      </div>
-      <div class="fg">
-        <label>デフォルト戦型</label>
-        <select id="sf-format">
-          <option value="東南戦">東南戦</option>
-          <option value="東風戦">東風戦</option>
-          <option value="一荘戦">一荘戦</option>
-        </select>
-      </div>
-    </div>
-    <div class="fg" style="margin-bottom:4px;">
-      <label>レート・その他メモ（任意）</label>
-      <input type="text" id="sf-rule" placeholder="例：0.5点5円、ハコ1000点">
-    </div>
+    <div class="toast" id="toast"></div>
 
-    <hr class="div">
-    <span class="section-lbl">ウマ設定（任意）</span>
-    <div class="uma-grid">
-      <div class="fg uma-fg"><label>1着</label><input type="number" id="sf-u1" placeholder="+10"></div>
-      <div class="fg uma-fg"><label>2着</label><input type="number" id="sf-u2" placeholder="+5"></div>
-      <div class="fg uma-fg"><label>3着</label><input type="number" id="sf-u3" placeholder="−5"></div>
-      <div class="fg uma-fg" id="sf-u4-wrap"><label>4着</label><input type="number" id="sf-u4" placeholder="−10"></div>
-    </div>
+    <script>
+      const COLORS = {
+        1: "var(--c1)",
+        2: "var(--c2)",
+        3: "var(--c3)",
+        4: "var(--c4)",
+      };
 
-    <hr class="div">
-    <span class="section-lbl">チップ設定（任意）</span>
-    <div class="g2" style="margin-bottom:14px;">
-      <div class="fg">
-        <label>チップ単価（円/枚）</label>
-        <input type="number" id="sf-chip-unit" placeholder="例：500">
-      </div>
-      <div class="fg">
-        <label>チップ種別メモ</label>
-        <input type="text" id="sf-chip-note" placeholder="例：赤チップ">
-      </div>
-    </div>
+      function loadSessions() {
+        return JSON.parse(localStorage.getItem("mj4_sessions") || "[]");
+      }
+      function saveSessions(d) {
+        localStorage.setItem("mj4_sessions", JSON.stringify(d));
+      }
+      function loadShops() {
+        return JSON.parse(localStorage.getItem("mj4_shops") || "[]");
+      }
+      function saveShops(d) {
+        localStorage.setItem("mj4_shops", JSON.stringify(d));
+      }
 
-    <div style="display:flex;gap:9px;">
-      <button class="btn-teal" style="flex:1;padding:10px;" onclick="saveShop()">保存</button>
-      <button class="btn-ghost" onclick="cancelShopForm()">キャンセル</button>
-    </div>
-    <input type="hidden" id="sf-editing-id" value="">
-  </div>
-</div>
+      let cur = null;
 
-<!-- ===== DATA ===== -->
-<div class="pane" id="pane-data">
-  <div class="panel">
-    <div class="pt">エクスポート</div>
-    <p class="data-note">記録したデータをファイルとして保存します。定期的なバックアップを推奨します。</p>
-    <div class="data-btn-row">
-      <button class="btn-export teal" onclick="exportJSON()">📄 JSON（バックアップ）</button>
-      <button class="btn-export" onclick="exportCSV()">📊 CSV（Excel用）</button>
-    </div>
-    <p class="data-note" style="margin-top:6px;">JSON → 再インポートして復元可能 ／ CSV → スプレッドシートで開けます</p>
-  </div>
-  <div class="panel">
-    <div class="pt">インポート（復元）</div>
-    <div class="import-area" id="drop-zone" onclick="document.getElementById('file-input').click()">
-      <input type="file" id="file-input" accept=".json" onchange="importJSON(event)">
-      <div class="import-lbl"><strong>📂 ファイルを選択 / ここにドロップ</strong>.json ファイルのみ対応</div>
-    </div>
-    <p class="data-note" style="margin-top:8px;color:var(--red);">⚠️ インポートは現在のデータへの追加です（上書きではありません）</p>
-  </div>
-  <div class="panel">
-    <div class="pt">データ管理</div>
-    <p class="data-note">現在の記録数：<strong id="data-count" style="color:var(--ink)">0</strong> セッション</p>
-    <div class="data-btn-row">
-      <button class="btn-export red" onclick="clearAll()">🗑️ すべてのデータを削除</button>
-    </div>
-    <p class="data-note" style="margin-top:7px;color:var(--red);">⚠️ 削除は元に戻せません。事前にエクスポート推奨。</p>
-  </div>
-</div>
+      document.addEventListener("DOMContentLoaded", () => {
+        document.getElementById("s-date").value = today();
+        initTabs();
+        updateTopStats();
+        populateShopPreset();
+        const saved = sessionStorage.getItem("mj4_cur");
+        if (saved) {
+          cur = JSON.parse(saved);
+          showSession();
+        }
+        const zone = document.getElementById("drop-zone");
+        zone.addEventListener("dragover", (e) => {
+          e.preventDefault();
+          zone.classList.add("drag");
+        });
+        zone.addEventListener("dragleave", () => zone.classList.remove("drag"));
+        zone.addEventListener("drop", (e) => {
+          e.preventDefault();
+          zone.classList.remove("drag");
+          const f = e.dataTransfer.files[0];
+          if (!f || !f.name.endsWith(".json")) {
+            showToast(".jsonファイルのみ対応");
+            return;
+          }
+          importJSON({ target: { files: [f], value: "" } });
+        });
+      });
 
-</div>
-<div class="toast" id="toast"></div>
+      function today() {
+        return new Date().toISOString().slice(0, 10);
+      }
 
-<script>
-const COLORS={1:'var(--c1)',2:'var(--c2)',3:'var(--c3)',4:'var(--c4)'};
+      function initTabs() {
+        document.querySelectorAll(".tab").forEach((btn) => {
+          btn.addEventListener("click", () => {
+            document
+              .querySelectorAll(".tab")
+              .forEach((b) => b.classList.remove("active"));
+            document
+              .querySelectorAll(".pane")
+              .forEach((p) => p.classList.remove("active"));
+            btn.classList.add("active");
+            document
+              .getElementById("pane-" + btn.dataset.tab)
+              .classList.add("active");
+            const t = btn.dataset.tab;
+            if (t === "analysis") renderAnalysis();
+            if (t === "history") renderHistory();
+            if (t === "shops") renderShopList();
+            if (t === "data") renderDataTab();
+          });
+        });
+      }
 
-function loadSessions(){return JSON.parse(localStorage.getItem('mj4_sessions')||'[]');}
-function saveSessions(d){localStorage.setItem('mj4_sessions',JSON.stringify(d));}
-function loadShops(){return JSON.parse(localStorage.getItem('mj4_shops')||'[]');}
-function saveShops(d){localStorage.setItem('mj4_shops',JSON.stringify(d));}
+      function populateShopPreset() {
+        const sel = document.getElementById("s-shop-preset");
+        sel.innerHTML = '<option value="">── 手動入力 ──</option>';
+        loadShops().forEach((s) => {
+          const o = document.createElement("option");
+          o.value = s.id;
+          o.textContent = s.name;
+          sel.appendChild(o);
+        });
+      }
 
-let cur=null;
+      function applyShopPreset() {
+        const id = document.getElementById("s-shop-preset").value;
+        if (!id) return;
+        const shop = loadShops().find((s) => s.id == id);
+        if (!shop) return;
+        document.getElementById("s-shop").value = shop.name;
+        document.getElementById("s-rule").value = shop.rule || "";
+        document.getElementById("s-players").value = shop.players || 4;
+        document.getElementById("s-format").value = shop.format || "東南戦";
+      }
 
-document.addEventListener('DOMContentLoaded',()=>{
-  document.getElementById('s-date').value=today();
-  initTabs();
-  updateTopStats();
-  populateShopPreset();
-  const saved=sessionStorage.getItem('mj4_cur');
-  if(saved){cur=JSON.parse(saved);showSession();}
-  const zone=document.getElementById('drop-zone');
-  zone.addEventListener('dragover',e=>{e.preventDefault();zone.classList.add('drag');});
-  zone.addEventListener('dragleave',()=>zone.classList.remove('drag'));
-  zone.addEventListener('drop',e=>{
-    e.preventDefault();zone.classList.remove('drag');
-    const f=e.dataTransfer.files[0];
-    if(!f||!f.name.endsWith('.json')){showToast('.jsonファイルのみ対応');return;}
-    importJSON({target:{files:[f],value:''}});
-  });
-});
+      function startSession() {
+        const shop = document.getElementById("s-shop").value.trim() || "未設定";
+        const date = document.getElementById("s-date").value || today();
+        const players = parseInt(document.getElementById("s-players").value);
+        const format = document.getElementById("s-format").value;
+        const rule = document.getElementById("s-rule").value.trim();
+        const presetId = document.getElementById("s-shop-preset").value;
+        const shopData = presetId
+          ? loadShops().find((s) => s.id == presetId)
+          : null;
+        cur = {
+          shop,
+          date,
+          players,
+          format,
+          rule,
+          shopData: shopData || null,
+          counts: { 1: 0, 2: 0, 3: 0, 4: 0 },
+        };
+        sessionStorage.setItem("mj4_cur", JSON.stringify(cur));
+        showSession();
+      }
 
-function today(){return new Date().toISOString().slice(0,10);}
+      function showSession() {
+        document.getElementById("setup-section").style.display = "none";
+        document.getElementById("session-section").style.display = "";
+        document.getElementById("sess-shop").textContent = cur.shop;
+        document.getElementById("sess-meta").textContent =
+          `${cur.date}　${cur.players}人 ${cur.format}${cur.rule ? " / " + cur.rule : ""}`;
+        buildCards();
+        refreshCounts();
+        const chipWrap = document.getElementById("chip-input-wrap");
+        chipWrap.style.display =
+          cur.shopData && cur.shopData.chipUnit ? "" : "none";
+        updateSaveSummary();
+      }
 
-function initTabs(){
-  document.querySelectorAll('.tab').forEach(btn=>{
-    btn.addEventListener('click',()=>{
-      document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));
-      document.querySelectorAll('.pane').forEach(p=>p.classList.remove('active'));
-      btn.classList.add('active');
-      document.getElementById('pane-'+btn.dataset.tab).classList.add('active');
-      const t=btn.dataset.tab;
-      if(t==='analysis')renderAnalysis();
-      if(t==='history')renderHistory();
-      if(t==='shops')renderShopList();
-      if(t==='data')renderDataTab();
-    });
-  });
-}
-
-function populateShopPreset(){
-  const sel=document.getElementById('s-shop-preset');
-  sel.innerHTML='<option value="">── 手動入力 ──</option>';
-  loadShops().forEach(s=>{
-    const o=document.createElement('option');
-    o.value=s.id;o.textContent=s.name;sel.appendChild(o);
-  });
-}
-
-function applyShopPreset(){
-  const id=document.getElementById('s-shop-preset').value;
-  if(!id)return;
-  const shop=loadShops().find(s=>s.id==id);
-  if(!shop)return;
-  document.getElementById('s-shop').value=shop.name;
-  document.getElementById('s-rule').value=shop.rule||'';
-  document.getElementById('s-players').value=shop.players||4;
-  document.getElementById('s-format').value=shop.format||'東南戦';
-}
-
-function startSession(){
-  const shop=document.getElementById('s-shop').value.trim()||'未設定';
-  const date=document.getElementById('s-date').value||today();
-  const players=parseInt(document.getElementById('s-players').value);
-  const format=document.getElementById('s-format').value;
-  const rule=document.getElementById('s-rule').value.trim();
-  const presetId=document.getElementById('s-shop-preset').value;
-  const shopData=presetId?loadShops().find(s=>s.id==presetId):null;
-  cur={shop,date,players,format,rule,shopData:shopData||null,counts:{1:0,2:0,3:0,4:0}};
-  sessionStorage.setItem('mj4_cur',JSON.stringify(cur));
-  showSession();
-}
-
-function showSession(){
-  document.getElementById('setup-section').style.display='none';
-  document.getElementById('session-section').style.display='';
-  document.getElementById('sess-shop').textContent=cur.shop;
-  document.getElementById('sess-meta').textContent=
-    `${cur.date}　${cur.players}人 ${cur.format}${cur.rule?' / '+cur.rule:''}`;
-  buildCards();refreshCounts();
-  const chipWrap=document.getElementById('chip-input-wrap');
-  chipWrap.style.display=(cur.shopData&&cur.shopData.chipUnit)?'':'none';
-  updateSaveSummary();
-}
-
-function buildCards(){
-  const grid=document.getElementById('counter-grid');
-  grid.innerHTML='';
-  for(let p=1;p<=cur.players;p++){
-    const col=COLORS[p];
-    const d=document.createElement('div');
-    d.className='counter-card';
-    d.innerHTML=`
+      function buildCards() {
+        const grid = document.getElementById("counter-grid");
+        grid.innerHTML = "";
+        for (let p = 1; p <= cur.players; p++) {
+          const col = COLORS[p];
+          const d = document.createElement("div");
+          d.className = "counter-card";
+          d.innerHTML = `
       <div class="place-label"><div class="place-dot" style="background:${col}"></div><span style="color:${col}">${p}着</span></div>
       <div class="cnt-num" id="n${p}" style="color:${col}">0</div>
       <div class="cnt-controls">
@@ -565,132 +1497,197 @@ function buildCards(){
         <button class="cnt-btn plus" ontouchstart="" onclick="chg(${p},1)">＋</button>
       </div>
       <div class="cnt-sub" id="sub${p}">0局</div>`;
-    grid.appendChild(d);
-  }
-}
+          grid.appendChild(d);
+        }
+      }
 
-function chg(p,d){
-  cur.counts[p]=Math.max(0,(cur.counts[p]||0)+d);
-  sessionStorage.setItem('mj4_cur',JSON.stringify(cur));
-  refreshCounts();pop('n'+p);
-}
+      function chg(p, d) {
+        cur.counts[p] = Math.max(0, (cur.counts[p] || 0) + d);
+        sessionStorage.setItem("mj4_cur", JSON.stringify(cur));
+        refreshCounts();
+        pop("n" + p);
+      }
 
-function pop(id){
-  const el=document.getElementById(id);if(!el)return;
-  el.classList.remove('pop');void el.offsetWidth;el.classList.add('pop');
-  setTimeout(()=>el.classList.remove('pop'),180);
-}
+      function pop(id) {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.classList.remove("pop");
+        void el.offsetWidth;
+        el.classList.add("pop");
+        setTimeout(() => el.classList.remove("pop"), 180);
+      }
 
-function refreshCounts(){
-  let total=0;
-  for(let p=1;p<=cur.players;p++){
-    const c=cur.counts[p]||0;
-    const ne=document.getElementById('n'+p),se=document.getElementById('sub'+p);
-    if(ne)ne.textContent=c;if(se)se.textContent=c+'局';
-    total+=c;
-  }
-  document.getElementById('cur-total').textContent=total;
-}
+      function refreshCounts() {
+        let total = 0;
+        for (let p = 1; p <= cur.players; p++) {
+          const c = cur.counts[p] || 0;
+          const ne = document.getElementById("n" + p),
+            se = document.getElementById("sub" + p);
+          if (ne) ne.textContent = c;
+          if (se) se.textContent = c + "局";
+          total += c;
+        }
+        document.getElementById("cur-total").textContent = total;
+      }
 
-function updateChipCalc(){
-  if(!cur||!cur.shopData||!cur.shopData.chipUnit)return;
-  const chips=parseInt(document.getElementById('s-chips').value)||0;
-  const unit=cur.shopData.chipUnit;
-  const val=chips*unit;
-  document.getElementById('chip-calc').textContent=
-    chips===0?'':` → チップ収支：${val>=0?'+':''}${val.toLocaleString()}円（${unit}円/枚）`;
-  updateSaveSummary();
-}
+      function updateChipCalc() {
+        if (!cur || !cur.shopData || !cur.shopData.chipUnit) return;
+        const chips = parseInt(document.getElementById("s-chips").value) || 0;
+        const unit = cur.shopData.chipUnit;
+        const val = chips * unit;
+        document.getElementById("chip-calc").textContent =
+          chips === 0
+            ? ""
+            : ` → チップ収支：${val >= 0 ? "+" : ""}${val.toLocaleString()}円（${unit}円/枚）`;
+        updateSaveSummary();
+      }
 
-function updateSaveSummary(){
-  const el=document.getElementById('save-summary');
-  if(!cur||!cur.shopData||!cur.shopData.chipUnit){el.style.display='none';return;}
-  const cash=parseInt(document.getElementById('s-balance').value)||0;
-  const chips=parseInt(document.getElementById('s-chips').value)||0;
-  const unit=cur.shopData.chipUnit;
-  const chipVal=chips*unit;
-  const net=cash+chipVal;
-  const fn=v=>(v>=0?'+':'')+v.toLocaleString()+'円';
-  el.style.display='';
-  el.innerHTML=`現金収支 ${fn(cash)}　＋　チップ ${fn(chipVal)}　＝　<strong>純収支 ${fn(net)}</strong>`;
-}
+      function updateSaveSummary() {
+        const el = document.getElementById("save-summary");
+        if (!cur || !cur.shopData || !cur.shopData.chipUnit) {
+          el.style.display = "none";
+          return;
+        }
+        const cash = parseInt(document.getElementById("s-balance").value) || 0;
+        const chips = parseInt(document.getElementById("s-chips").value) || 0;
+        const unit = cur.shopData.chipUnit;
+        const chipVal = chips * unit;
+        const net = cash + chipVal;
+        const fn = (v) => (v >= 0 ? "+" : "") + v.toLocaleString() + "円";
+        el.style.display = "";
+        el.innerHTML = `現金収支 ${fn(cash)}　＋　チップ ${fn(chipVal)}　＝　<strong>純収支 ${fn(net)}</strong>`;
+      }
 
-function confirmEnd(){
-  if(!confirm('セッションを終了してカウントをリセットしますか？\n（保存していない場合はデータが消えます）'))return;
-  clearSession();
-}
+      function confirmEnd() {
+        if (
+          !confirm(
+            "セッションを終了してカウントをリセットしますか？\n（保存していない場合はデータが消えます）",
+          )
+        )
+          return;
+        clearSession();
+      }
 
-function clearSession(){
-  cur=null;sessionStorage.removeItem('mj4_cur');
-  document.getElementById('setup-section').style.display='';
-  document.getElementById('session-section').style.display='none';
-  ['s-balance','s-chips','s-note'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
-  const cc=document.getElementById('chip-calc');if(cc)cc.textContent='';
-  const ss=document.getElementById('save-summary');if(ss)ss.style.display='none';
-}
+      function clearSession() {
+        cur = null;
+        sessionStorage.removeItem("mj4_cur");
+        document.getElementById("setup-section").style.display = "";
+        document.getElementById("session-section").style.display = "none";
+        ["s-balance", "s-chips", "s-note"].forEach((id) => {
+          const el = document.getElementById(id);
+          if (el) el.value = "";
+        });
+        const cc = document.getElementById("chip-calc");
+        if (cc) cc.textContent = "";
+        const ss = document.getElementById("save-summary");
+        if (ss) ss.style.display = "none";
+      }
 
-function saveSession(){
-  const balance=parseInt(document.getElementById('s-balance').value)||0;
-  const note=document.getElementById('s-note').value.trim();
-  const chips=(cur.shopData&&cur.shopData.chipUnit)?(parseInt(document.getElementById('s-chips').value)||0):0;
-  const chipUnit=(cur.shopData&&cur.shopData.chipUnit)||0;
-  const chipVal=chips*chipUnit;
-  const net=balance+chipVal;
-  const sessions=loadSessions();
-  sessions.unshift({
-    id:Date.now(),shop:cur.shop,date:cur.date,players:cur.players,
-    format:cur.format,rule:cur.rule,shopId:cur.shopData?cur.shopData.id:null,
-    counts:{...cur.counts},balance,chips,chipUnit,chipVal,net,note
-  });
-  saveSessions(sessions);
-  updateTopStats();
-  showToast('保存しました ✦');
-  setTimeout(()=>clearSession(),800);
-}
+      function saveSession() {
+        const balance =
+          parseInt(document.getElementById("s-balance").value) || 0;
+        const note = document.getElementById("s-note").value.trim();
+        const chips =
+          cur.shopData && cur.shopData.chipUnit
+            ? parseInt(document.getElementById("s-chips").value) || 0
+            : 0;
+        const chipUnit = (cur.shopData && cur.shopData.chipUnit) || 0;
+        const chipVal = chips * chipUnit;
+        const net = balance + chipVal;
+        const sessions = loadSessions();
+        sessions.unshift({
+          id: Date.now(),
+          shop: cur.shop,
+          date: cur.date,
+          players: cur.players,
+          format: cur.format,
+          rule: cur.rule,
+          shopId: cur.shopData ? cur.shopData.id : null,
+          counts: { ...cur.counts },
+          balance,
+          chips,
+          chipUnit,
+          chipVal,
+          net,
+          note,
+        });
+        saveSessions(sessions);
+        updateTopStats();
+        showToast("保存しました ✦");
+        setTimeout(() => clearSession(), 800);
+      }
 
-function updateTopStats(){
-  const all=loadSessions();
-  let games=0,sum=0,first=0,bal=0;
-  all.forEach(s=>{
-    for(let p=1;p<=s.players;p++){const c=s.counts[p]||0;games+=c;sum+=p*c;if(p===1)first+=c;}
-    bal+=(s.net!==undefined?s.net:(s.balance||0));
-  });
-  document.getElementById('tsGames').textContent=games;
-  document.getElementById('tsAvg').textContent=games?(sum/games).toFixed(2):'—';
-  document.getElementById('tsFirst').textContent=games?Math.round(first/games*100)+'%':'—';
-  const el=document.getElementById('tsBal');
-  el.textContent=(bal>=0?'¥+':'¥')+bal.toLocaleString();
-  el.className='ts-v '+(bal>0?'pos':bal<0?'neg':'');
-}
+      function updateTopStats() {
+        const all = loadSessions();
+        let games = 0,
+          sum = 0,
+          first = 0,
+          bal = 0;
+        all.forEach((s) => {
+          for (let p = 1; p <= s.players; p++) {
+            const c = s.counts[p] || 0;
+            games += c;
+            sum += p * c;
+            if (p === 1) first += c;
+          }
+          bal += s.net !== undefined ? s.net : s.balance || 0;
+        });
+        document.getElementById("tsGames").textContent = games;
+        document.getElementById("tsAvg").textContent = games
+          ? (sum / games).toFixed(2)
+          : "—";
+        document.getElementById("tsFirst").textContent = games
+          ? Math.round((first / games) * 100) + "%"
+          : "—";
+        const el = document.getElementById("tsBal");
+        el.textContent = (bal >= 0 ? "¥+" : "¥") + bal.toLocaleString();
+        el.className = "ts-v " + (bal > 0 ? "pos" : bal < 0 ? "neg" : "");
+      }
 
-function renderHistory(){
-  const fp=document.getElementById('f-players').value;
-  const fs=document.getElementById('f-sort').value;
-  let data=loadSessions();
-  if(fp!=='all')data=data.filter(s=>s.players==fp);
-  if(fs==='old')data.sort((a,b)=>a.date.localeCompare(b.date));
-  else if(fs==='balH')data.sort((a,b)=>(b.net||b.balance)-(a.net||a.balance));
-  else if(fs==='balL')data.sort((a,b)=>(a.net||a.balance)-(b.net||b.balance));
-  const el=document.getElementById('history-list');
-  if(!data.length){el.innerHTML='<div class="empty"><span>🀄</span>記録がありません</div>';return;}
-  const fn=v=>(v>0?'+':'')+v.toLocaleString()+'円';
-  const bc=v=>v>0?'pos':v<0?'neg':'zero';
-  el.innerHTML=data.map(s=>{
-    const max=s.players||4;
-    const total=[1,2,3,4].filter(p=>p<=max).reduce((a,p)=>a+(s.counts[p]||0),0);
-    const chips=[1,2,3,4].filter(p=>p<=max).map(p=>`
+      function renderHistory() {
+        const fp = document.getElementById("f-players").value;
+        const fs = document.getElementById("f-sort").value;
+        let data = loadSessions();
+        if (fp !== "all") data = data.filter((s) => s.players == fp);
+        if (fs === "old") data.sort((a, b) => a.date.localeCompare(b.date));
+        else if (fs === "balH")
+          data.sort((a, b) => (b.net || b.balance) - (a.net || a.balance));
+        else if (fs === "balL")
+          data.sort((a, b) => (a.net || a.balance) - (b.net || b.balance));
+        const el = document.getElementById("history-list");
+        if (!data.length) {
+          el.innerHTML =
+            '<div class="empty"><span>🀄</span>記録がありません</div>';
+          return;
+        }
+        const fn = (v) => (v > 0 ? "+" : "") + v.toLocaleString() + "円";
+        const bc = (v) => (v > 0 ? "pos" : v < 0 ? "neg" : "zero");
+        el.innerHTML = data
+          .map((s) => {
+            const max = s.players || 4;
+            const total = [1, 2, 3, 4]
+              .filter((p) => p <= max)
+              .reduce((a, p) => a + (s.counts[p] || 0), 0);
+            const chips = [1, 2, 3, 4]
+              .filter((p) => p <= max)
+              .map(
+                (p) => `
       <div class="pchip">
         <div class="pdot" style="background:${COLORS[p]}"></div>
         <span style="color:${COLORS[p]};font-size:0.74rem">${p}着</span>
-        <span class="pnum">${s.counts[p]||0}</span>
-      </div>`).join('');
-    const net=s.net!==undefined?s.net:s.balance;
-    const chipBadge=s.chipVal?`<span class="chip-badge">チップ ${s.chipVal>=0?'+':''}${s.chipVal.toLocaleString()}円</span>`:'';
-    return `<div class="sess-item">
+        <span class="pnum">${s.counts[p] || 0}</span>
+      </div>`,
+              )
+              .join("");
+            const net = s.net !== undefined ? s.net : s.balance;
+            const chipBadge = s.chipVal
+              ? `<span class="chip-badge">チップ ${s.chipVal >= 0 ? "+" : ""}${s.chipVal.toLocaleString()}円</span>`
+              : "";
+            return `<div class="sess-item">
       <div class="sh">
         <div>
           <div class="sh-shop">${esc(s.shop)}</div>
-          <div class="sh-meta">${s.date}　${s.players}人 ${s.format}${s.rule?' / '+esc(s.rule):''}</div>
+          <div class="sh-meta">${s.date}　${s.players}人 ${s.format}${s.rule ? " / " + esc(s.rule) : ""}</div>
         </div>
         <div class="sh-right">
           <div class="sh-bal ${bc(net)}">${fn(net)}</div>
@@ -701,68 +1698,118 @@ function renderHistory(){
         ${chips}
         <div class="stotal">${total}局</div>
         ${chipBadge}
-        ${s.note?`<div class="snote">${esc(s.note)}</div>`:''}
+        ${s.note ? `<div class="snote">${esc(s.note)}</div>` : ""}
       </div>
     </div>`;
-  }).join('');
-}
+          })
+          .join("");
+      }
 
-function delSess(id){
-  if(!confirm('この記録を削除しますか？'))return;
-  saveSessions(loadSessions().filter(s=>s.id!==id));
-  updateTopStats();renderHistory();
-}
+      function delSess(id) {
+        if (!confirm("この記録を削除しますか？")) return;
+        saveSessions(loadSessions().filter((s) => s.id !== id));
+        updateTopStats();
+        renderHistory();
+      }
 
-function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+      function esc(s) {
+        return String(s)
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;");
+      }
 
-function renderAnalysis(){
-  const all=loadSessions();
-  renderLineChart(all);
-  renderDist(all.filter(s=>s.players===4),4,'an-dist4');
-  renderDist(all.filter(s=>s.players===3),3,'an-dist3');
-  renderBal(all);
-  renderMonthly(all);
-  renderShopStats(all);
-}
+      function renderAnalysis() {
+        const all = loadSessions();
+        renderLineChart(all);
+        renderDist(
+          all.filter((s) => s.players === 4),
+          4,
+          "an-dist4",
+        );
+        renderDist(
+          all.filter((s) => s.players === 3),
+          3,
+          "an-dist3",
+        );
+        renderBal(all);
+        renderMonthly(all);
+        renderShopStats(all);
+      }
 
-function renderLineChart(sessions){
-  const el=document.getElementById('an-line');
-  if(!sessions.length){el.innerHTML='<div style="color:#ccc;font-size:0.8rem;text-align:center;padding:20px 0;">データなし</div>';return;}
-  const sorted=[...sessions].sort((a,b)=>a.date.localeCompare(b.date)||a.id-b.id);
-  let running=0;
-  const pts=sorted.map((s,i)=>{
-    running+=(s.net!==undefined?s.net:s.balance);
-    return{i,val:running,label:s.date.slice(5)};
-  });
-  const W=600,H=150,PL=48,PR=10,PT=18,PB=24;
-  const cW=W-PL-PR,cH=H-PT-PB;
-  const vals=pts.map(p=>p.val);
-  const minV=Math.min(0,...vals),maxV=Math.max(0,...vals);
-  const range=Math.max(maxV-minV,1);
-  const toX=i=>PL+(i/Math.max(pts.length-1,1))*cW;
-  const toY=v=>PT+cH-((v-minV)/range)*cH;
-  const zY=toY(0);
-  const pathD=pts.map((p,i)=>`${i===0?'M':'L'}${toX(i).toFixed(1)},${toY(p.val).toFixed(1)}`).join(' ');
-  const areaD=pathD+` L${toX(pts.length-1).toFixed(1)},${zY.toFixed(1)} L${toX(0).toFixed(1)},${zY.toFixed(1)} Z`;
-  const step=Math.max(1,Math.floor(pts.length/7));
-  const shown=pts.filter((_,i)=>i===0||i===pts.length-1||i%step===0);
-  const dots=shown.map(p=>{
-    const x=toX(p.i),y=toY(p.val);
-    const cls=p.val>=0?'chart-dot pos':'chart-dot neg';
-    const anchor=p.i<pts.length*0.15?'start':p.i>pts.length*0.85?'end':'middle';
-    const fmtK=v=>(v>=0?'+':'')+Math.round(v/1000)+'k';
-    const col=p.val>=0?'var(--teal)':'var(--red)';
-    return `<circle class="${cls}" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="4"/>
-            <text class="chart-val" x="${x.toFixed(1)}" y="${(y-8).toFixed(1)}" text-anchor="${anchor}" fill="${col}">${fmtK(p.val)}</text>
-            <text class="chart-lbl" x="${x.toFixed(1)}" y="${(H-5).toFixed(1)}" text-anchor="${anchor}">${p.label}</text>`;
-  }).join('');
-  const yLines=[minV,0,maxV].filter((v,i,a)=>a.indexOf(v)===i).map(v=>{
-    const y=toY(v).toFixed(1);
-    const lbl=v===0?'0':(v>=0?'+':'')+Math.round(v/1000)+'k';
-    return `<line x1="${PL}" y1="${y}" x2="${W-PR}" y2="${y}" stroke="${v===0?'rgba(26,18,8,0.2)':'rgba(26,18,8,0.07)'}" stroke-dasharray="${v===0?'4,3':'2,2'}"/>
-            <text class="chart-lbl" x="${(PL-4).toFixed(1)}" y="${(parseFloat(y)+3.5).toFixed(1)}" text-anchor="end">${lbl}</text>`;
-  }).join('');
-  el.innerHTML=`<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet">
+      function renderLineChart(sessions) {
+        const el = document.getElementById("an-line");
+        if (!sessions.length) {
+          el.innerHTML =
+            '<div style="color:#ccc;font-size:0.8rem;text-align:center;padding:20px 0;">データなし</div>';
+          return;
+        }
+        const sorted = [...sessions].sort(
+          (a, b) => a.date.localeCompare(b.date) || a.id - b.id,
+        );
+        let running = 0;
+        const pts = sorted.map((s, i) => {
+          running += s.net !== undefined ? s.net : s.balance;
+          return { i, val: running, label: s.date.slice(5) };
+        });
+        const W = 600,
+          H = 150,
+          PL = 48,
+          PR = 10,
+          PT = 18,
+          PB = 24;
+        const cW = W - PL - PR,
+          cH = H - PT - PB;
+        const vals = pts.map((p) => p.val);
+        const minV = Math.min(0, ...vals),
+          maxV = Math.max(0, ...vals);
+        const range = Math.max(maxV - minV, 1);
+        const toX = (i) => PL + (i / Math.max(pts.length - 1, 1)) * cW;
+        const toY = (v) => PT + cH - ((v - minV) / range) * cH;
+        const zY = toY(0);
+        const pathD = pts
+          .map(
+            (p, i) =>
+              `${i === 0 ? "M" : "L"}${toX(i).toFixed(1)},${toY(p.val).toFixed(1)}`,
+          )
+          .join(" ");
+        const areaD =
+          pathD +
+          ` L${toX(pts.length - 1).toFixed(1)},${zY.toFixed(1)} L${toX(0).toFixed(1)},${zY.toFixed(1)} Z`;
+        const step = Math.max(1, Math.floor(pts.length / 7));
+        const shown = pts.filter(
+          (_, i) => i === 0 || i === pts.length - 1 || i % step === 0,
+        );
+        const dots = shown
+          .map((p) => {
+            const x = toX(p.i),
+              y = toY(p.val);
+            const cls = p.val >= 0 ? "chart-dot pos" : "chart-dot neg";
+            const anchor =
+              p.i < pts.length * 0.15
+                ? "start"
+                : p.i > pts.length * 0.85
+                  ? "end"
+                  : "middle";
+            const fmtK = (v) =>
+              (v >= 0 ? "+" : "") + Math.round(v / 1000) + "k";
+            const col = p.val >= 0 ? "var(--teal)" : "var(--red)";
+            return `<circle class="${cls}" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="4"/>
+            <text class="chart-val" x="${x.toFixed(1)}" y="${(y - 8).toFixed(1)}" text-anchor="${anchor}" fill="${col}">${fmtK(p.val)}</text>
+            <text class="chart-lbl" x="${x.toFixed(1)}" y="${(H - 5).toFixed(1)}" text-anchor="${anchor}">${p.label}</text>`;
+          })
+          .join("");
+        const yLines = [minV, 0, maxV]
+          .filter((v, i, a) => a.indexOf(v) === i)
+          .map((v) => {
+            const y = toY(v).toFixed(1);
+            const lbl =
+              v === 0 ? "0" : (v >= 0 ? "+" : "") + Math.round(v / 1000) + "k";
+            return `<line x1="${PL}" y1="${y}" x2="${W - PR}" y2="${y}" stroke="${v === 0 ? "rgba(26,18,8,0.2)" : "rgba(26,18,8,0.07)"}" stroke-dasharray="${v === 0 ? "4,3" : "2,2"}"/>
+            <text class="chart-lbl" x="${(PL - 4).toFixed(1)}" y="${(parseFloat(y) + 3.5).toFixed(1)}" text-anchor="end">${lbl}</text>`;
+          })
+          .join("");
+        el.innerHTML = `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet">
     <defs>
       <linearGradient id="cg" x1="0" y1="0" x2="0" y2="1">
         <stop offset="0%" stop-color="var(--teal)" stop-opacity="0.6"/>
@@ -774,236 +1821,402 @@ function renderLineChart(sessions){
     <path class="chart-line" d="${pathD}"/>
     ${dots}
   </svg>`;
-}
+      }
 
-function renderDist(sessions,players,id){
-  const el=document.getElementById(id);
-  if(!sessions.length){el.innerHTML='<div style="color:#ccc;font-size:0.78rem;">データなし</div>';return;}
-  const cnts={},tot={val:0};
-  for(let p=1;p<=players;p++)cnts[p]=0;
-  sessions.forEach(s=>{for(let p=1;p<=players;p++){const c=s.counts[p]||0;cnts[p]+=c;tot.val+=c;}});
-  el.innerHTML=[1,2,3,4].filter(p=>p<=players).map(p=>{
-    const pct=tot.val?Math.round(cnts[p]/tot.val*100):0;
-    return `<div class="bar-row">
+      function renderDist(sessions, players, id) {
+        const el = document.getElementById(id);
+        if (!sessions.length) {
+          el.innerHTML =
+            '<div style="color:#ccc;font-size:0.78rem;">データなし</div>';
+          return;
+        }
+        const cnts = {},
+          tot = { val: 0 };
+        for (let p = 1; p <= players; p++) cnts[p] = 0;
+        sessions.forEach((s) => {
+          for (let p = 1; p <= players; p++) {
+            const c = s.counts[p] || 0;
+            cnts[p] += c;
+            tot.val += c;
+          }
+        });
+        el.innerHTML = [1, 2, 3, 4]
+          .filter((p) => p <= players)
+          .map((p) => {
+            const pct = tot.val ? Math.round((cnts[p] / tot.val) * 100) : 0;
+            return `<div class="bar-row">
       <div class="bar-lbl" style="color:${COLORS[p]}">${p}</div>
       <div class="bar-track"><div class="bar-fill" style="width:${pct}%;background:${COLORS[p]}"></div></div>
       <div class="bar-pct">${pct}%</div>
       <div class="bar-cnt">${cnts[p]}</div>
     </div>`;
-  }).join('');
-}
+          })
+          .join("");
+      }
 
-function renderBal(sessions){
-  const el=document.getElementById('an-bal');
-  if(!sessions.length){el.innerHTML='<div style="color:#ccc;font-size:0.78rem;">データなし</div>';return;}
-  const nets=sessions.map(s=>s.net!==undefined?s.net:s.balance);
-  const total=nets.reduce((a,b)=>a+b,0),avg=Math.round(total/sessions.length);
-  const best=Math.max(...nets),worst=Math.min(...nets);
-  const fn=v=>(v>0?'+':'')+v.toLocaleString()+'円';
-  const c=v=>v>0?'pos':v<0?'neg':'';
-  const chipTotal=sessions.reduce((a,s)=>a+(s.chipVal||0),0);
-  el.innerHTML=`
+      function renderBal(sessions) {
+        const el = document.getElementById("an-bal");
+        if (!sessions.length) {
+          el.innerHTML =
+            '<div style="color:#ccc;font-size:0.78rem;">データなし</div>';
+          return;
+        }
+        const nets = sessions.map((s) =>
+          s.net !== undefined ? s.net : s.balance,
+        );
+        const total = nets.reduce((a, b) => a + b, 0),
+          avg = Math.round(total / sessions.length);
+        const best = Math.max(...nets),
+          worst = Math.min(...nets);
+        const fn = (v) => (v > 0 ? "+" : "") + v.toLocaleString() + "円";
+        const c = (v) => (v > 0 ? "pos" : v < 0 ? "neg" : "");
+        const chipTotal = sessions.reduce((a, s) => a + (s.chipVal || 0), 0);
+        el.innerHTML = `
     <div class="kv"><span>累計純収支</span><span class="v ${c(total)}">${fn(total)}</span></div>
     <div class="kv"><span>平均（1セッション）</span><span class="v ${c(avg)}">${fn(avg)}</span></div>
     <div class="kv"><span>最高</span><span class="v pos">${fn(best)}</span></div>
     <div class="kv"><span>最低</span><span class="v neg">${fn(worst)}</span></div>
-    ${chipTotal?`<div class="kv"><span>累計チップ収支</span><span class="v ${c(chipTotal)}">${fn(chipTotal)}</span></div>`:''}
+    ${chipTotal ? `<div class="kv"><span>累計チップ収支</span><span class="v ${c(chipTotal)}">${fn(chipTotal)}</span></div>` : ""}
     <div class="kv"><span>セッション数</span><span class="v">${sessions.length}回</span></div>`;
-}
+      }
 
-function renderMonthly(sessions){
-  const el=document.getElementById('an-monthly');
-  if(!sessions.length){el.innerHTML='<div style="color:#ccc;font-size:0.78rem;">データなし</div>';return;}
-  const m={};
-  sessions.forEach(s=>{const ym=s.date.slice(0,7);m[ym]=(m[ym]||0)+(s.net!==undefined?s.net:s.balance);});
-  const keys=Object.keys(m).sort().slice(-6),vals=keys.map(k=>m[k]);
-  const maxA=Math.max(...vals.map(v=>Math.abs(v)),1);
-  el.innerHTML='<div class="monthly-wrap">'+keys.map((k,i)=>{
-    const v=vals[i],h=Math.round(Math.abs(v)/maxA*62);
-    return `<div class="m-col"><div class="m-bar ${v>=0?'pos':'neg'}" style="height:${h}px"></div><div class="m-lbl">${k.slice(5)}月</div></div>`;
-  }).join('')+'</div>';
-}
+      function renderMonthly(sessions) {
+        const el = document.getElementById("an-monthly");
+        if (!sessions.length) {
+          el.innerHTML =
+            '<div style="color:#ccc;font-size:0.78rem;">データなし</div>';
+          return;
+        }
+        const m = {};
+        sessions.forEach((s) => {
+          const ym = s.date.slice(0, 7);
+          m[ym] = (m[ym] || 0) + (s.net !== undefined ? s.net : s.balance);
+        });
+        const keys = Object.keys(m).sort().slice(-6),
+          vals = keys.map((k) => m[k]);
+        const maxA = Math.max(...vals.map((v) => Math.abs(v)), 1);
+        el.innerHTML =
+          '<div class="monthly-wrap">' +
+          keys
+            .map((k, i) => {
+              const v = vals[i],
+                h = Math.round((Math.abs(v) / maxA) * 62);
+              return `<div class="m-col"><div class="m-bar ${v >= 0 ? "pos" : "neg"}" style="height:${h}px"></div><div class="m-lbl">${k.slice(5)}月</div></div>`;
+            })
+            .join("") +
+          "</div>";
+      }
 
-function renderShopStats(sessions){
-  const el=document.getElementById('an-shop');
-  if(!sessions.length){el.innerHTML='<div style="color:#ccc;font-size:0.78rem;">データなし</div>';return;}
-  const shops={};
-  sessions.forEach(s=>{
-    if(!shops[s.shop])shops[s.shop]={bal:0,cnt:0,games:0,p1:0,chipVal:0};
-    shops[s.shop].bal+=(s.net!==undefined?s.net:s.balance);
-    shops[s.shop].cnt++;shops[s.shop].chipVal+=(s.chipVal||0);
-    for(let p=1;p<=s.players;p++){const c=s.counts[p]||0;shops[s.shop].games+=c;if(p===1)shops[s.shop].p1+=c;}
-  });
-  el.innerHTML=Object.entries(shops).sort((a,b)=>b[1].cnt-a[1].cnt).map(([shop,d])=>{
-    const rate=d.games?Math.round(d.p1/d.games*100)+'%':'—';
-    const bc=d.bal>0?'pos':d.bal<0?'neg':'';
-    const fn=v=>(v>=0?'+':'')+v.toLocaleString()+'円';
-    const chipStr=d.chipVal?` / チップ${fn(d.chipVal)}`:'';
-    return `<div class="kv" style="padding:8px 0;border-bottom:1px solid rgba(26,18,8,0.07);">
+      function renderShopStats(sessions) {
+        const el = document.getElementById("an-shop");
+        if (!sessions.length) {
+          el.innerHTML =
+            '<div style="color:#ccc;font-size:0.78rem;">データなし</div>';
+          return;
+        }
+        const shops = {};
+        sessions.forEach((s) => {
+          if (!shops[s.shop])
+            shops[s.shop] = { bal: 0, cnt: 0, games: 0, p1: 0, chipVal: 0 };
+          shops[s.shop].bal += s.net !== undefined ? s.net : s.balance;
+          shops[s.shop].cnt++;
+          shops[s.shop].chipVal += s.chipVal || 0;
+          for (let p = 1; p <= s.players; p++) {
+            const c = s.counts[p] || 0;
+            shops[s.shop].games += c;
+            if (p === 1) shops[s.shop].p1 += c;
+          }
+        });
+        el.innerHTML = Object.entries(shops)
+          .sort((a, b) => b[1].cnt - a[1].cnt)
+          .map(([shop, d]) => {
+            const rate = d.games
+              ? Math.round((d.p1 / d.games) * 100) + "%"
+              : "—";
+            const bc = d.bal > 0 ? "pos" : d.bal < 0 ? "neg" : "";
+            const fn = (v) => (v >= 0 ? "+" : "") + v.toLocaleString() + "円";
+            const chipStr = d.chipVal ? ` / チップ${fn(d.chipVal)}` : "";
+            return `<div class="kv" style="padding:8px 0;border-bottom:1px solid rgba(26,18,8,0.07);">
       <span><strong>${esc(shop)}</strong><br><small style="color:#bbb">${d.cnt}回 ${d.games}局 / 1着率${rate}${chipStr}</small></span>
       <span class="v ${bc}">${fn(d.bal)}</span>
     </div>`;
-  }).join('');
-}
+          })
+          .join("");
+      }
 
-function renderShopList(){
-  const shops=loadShops();
-  const el=document.getElementById('shop-list');
-  if(!shops.length){
-    el.innerHTML='<div style="color:#ccc;font-size:0.82rem;text-align:center;padding:16px 0 20px;">まだ店舗が登録されていません</div>';
-    return;
-  }
-  el.innerHTML=shops.map(s=>{
-    const uma=s.uma?`ウマ ${s.uma[1]>=0?'+':''}${s.uma[1]} / ${s.uma[2]>=0?'+':''}${s.uma[2]} / ${s.uma[3]} / ${s.uma[4]??'—'}`:'';
-    const chip=s.chipUnit?`チップ ${s.chipUnit}円/枚${s.chipNote?' ('+s.chipNote+')':''}`:'';
-    return `<div class="shop-card">
+      function renderShopList() {
+        const shops = loadShops();
+        const el = document.getElementById("shop-list");
+        if (!shops.length) {
+          el.innerHTML =
+            '<div style="color:#ccc;font-size:0.82rem;text-align:center;padding:16px 0 20px;">まだ店舗が登録されていません</div>';
+          return;
+        }
+        el.innerHTML = shops
+          .map((s) => {
+            const uma = s.uma
+              ? `ウマ ${s.uma[1] >= 0 ? "+" : ""}${s.uma[1]} / ${s.uma[2] >= 0 ? "+" : ""}${s.uma[2]} / ${s.uma[3]} / ${s.uma[4] ?? "—"}`
+              : "";
+            const chip = s.chipUnit
+              ? `チップ ${s.chipUnit}円/枚${s.chipNote ? " (" + s.chipNote + ")" : ""}`
+              : "";
+            return `<div class="shop-card">
       <div style="flex:1;min-width:0;">
         <div class="sc-name">${esc(s.name)}</div>
-        <div class="sc-detail">${s.players}人 ${s.format}${s.rule?' / '+esc(s.rule):''}${uma?'<br>'+uma:''}${chip?(uma?' ／ ':'<br>')+chip:''}</div>
+        <div class="sc-detail">${s.players}人 ${s.format}${s.rule ? " / " + esc(s.rule) : ""}${uma ? "<br>" + uma : ""}${chip ? (uma ? " ／ " : "<br>") + chip : ""}</div>
       </div>
       <div class="sc-actions">
         <button class="btn-ghost" onclick="editShop(${s.id})">編集</button>
         <button class="btn-red" onclick="deleteShop(${s.id})">削除</button>
       </div>
     </div>`;
-  }).join('');
-}
+          })
+          .join("");
+      }
 
-function showShopForm(shopData){
-  document.getElementById('shop-form-title').textContent=shopData?'店舗を編集':'店舗を追加';
-  document.getElementById('sf-name').value=shopData?.name||'';
-  document.getElementById('sf-players').value=shopData?.players||4;
-  document.getElementById('sf-format').value=shopData?.format||'東南戦';
-  document.getElementById('sf-rule').value=shopData?.rule||'';
-  document.getElementById('sf-u1').value=shopData?.uma?.[1]??'';
-  document.getElementById('sf-u2').value=shopData?.uma?.[2]??'';
-  document.getElementById('sf-u3').value=shopData?.uma?.[3]??'';
-  document.getElementById('sf-u4').value=shopData?.uma?.[4]??'';
-  document.getElementById('sf-chip-unit').value=shopData?.chipUnit||'';
-  document.getElementById('sf-chip-note').value=shopData?.chipNote||'';
-  document.getElementById('sf-editing-id').value=shopData?.id||'';
-  const panel=document.getElementById('shop-form-panel');
-  panel.style.display='';
-  panel.scrollIntoView({behavior:'smooth',block:'start'});
-}
+      function showShopForm(shopData) {
+        document.getElementById("shop-form-title").textContent = shopData
+          ? "店舗を編集"
+          : "店舗を追加";
+        document.getElementById("sf-name").value = shopData?.name || "";
+        document.getElementById("sf-players").value = shopData?.players || 4;
+        document.getElementById("sf-format").value =
+          shopData?.format || "東南戦";
+        document.getElementById("sf-rule").value = shopData?.rule || "";
+        document.getElementById("sf-u1").value = shopData?.uma?.[1] ?? "";
+        document.getElementById("sf-u2").value = shopData?.uma?.[2] ?? "";
+        document.getElementById("sf-u3").value = shopData?.uma?.[3] ?? "";
+        document.getElementById("sf-u4").value = shopData?.uma?.[4] ?? "";
+        document.getElementById("sf-chip-unit").value =
+          shopData?.chipUnit || "";
+        document.getElementById("sf-chip-note").value =
+          shopData?.chipNote || "";
+        document.getElementById("sf-editing-id").value = shopData?.id || "";
+        const panel = document.getElementById("shop-form-panel");
+        panel.style.display = "";
+        panel.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
 
-function editShop(id){
-  const shop=loadShops().find(s=>s.id===id);
-  if(shop)showShopForm(shop);
-}
+      function editShop(id) {
+        const shop = loadShops().find((s) => s.id === id);
+        if (shop) showShopForm(shop);
+      }
 
-function cancelShopForm(){
-  document.getElementById('shop-form-panel').style.display='none';
-}
+      function cancelShopForm() {
+        document.getElementById("shop-form-panel").style.display = "none";
+      }
 
-function saveShop(){
-  const name=document.getElementById('sf-name').value.trim();
-  if(!name){showToast('店舗名を入力してください');return;}
-  const players=parseInt(document.getElementById('sf-players').value);
-  const format=document.getElementById('sf-format').value;
-  const rule=document.getElementById('sf-rule').value.trim();
-  const u1=document.getElementById('sf-u1').value;
-  const u2=document.getElementById('sf-u2').value;
-  const u3=document.getElementById('sf-u3').value;
-  const u4=document.getElementById('sf-u4').value;
-  const chipUnit=parseInt(document.getElementById('sf-chip-unit').value)||0;
-  const chipNote=document.getElementById('sf-chip-note').value.trim();
-  const uma=(u1||u2||u3||u4)?{1:parseFloat(u1)||0,2:parseFloat(u2)||0,3:parseFloat(u3)||0,4:parseFloat(u4)||0}:null;
-  const editId=parseInt(document.getElementById('sf-editing-id').value)||null;
-  const shops=loadShops();
-  if(editId){
-    const idx=shops.findIndex(s=>s.id===editId);
-    if(idx>=0)shops[idx]={...shops[idx],name,players,format,rule,uma,chipUnit,chipNote};
-  }else{
-    shops.push({id:Date.now(),name,players,format,rule,uma,chipUnit,chipNote});
-  }
-  saveShops(shops);
-  populateShopPreset();
-  cancelShopForm();
-  renderShopList();
-  showToast(editId?'店舗を更新しました':'店舗を追加しました');
-}
+      function saveShop() {
+        const name = document.getElementById("sf-name").value.trim();
+        if (!name) {
+          showToast("店舗名を入力してください");
+          return;
+        }
+        const players = parseInt(document.getElementById("sf-players").value);
+        const format = document.getElementById("sf-format").value;
+        const rule = document.getElementById("sf-rule").value.trim();
+        const u1 = document.getElementById("sf-u1").value;
+        const u2 = document.getElementById("sf-u2").value;
+        const u3 = document.getElementById("sf-u3").value;
+        const u4 = document.getElementById("sf-u4").value;
+        const chipUnit =
+          parseInt(document.getElementById("sf-chip-unit").value) || 0;
+        const chipNote = document.getElementById("sf-chip-note").value.trim();
+        const uma =
+          u1 || u2 || u3 || u4
+            ? {
+                1: parseFloat(u1) || 0,
+                2: parseFloat(u2) || 0,
+                3: parseFloat(u3) || 0,
+                4: parseFloat(u4) || 0,
+              }
+            : null;
+        const editId =
+          parseInt(document.getElementById("sf-editing-id").value) || null;
+        const shops = loadShops();
+        if (editId) {
+          const idx = shops.findIndex((s) => s.id === editId);
+          if (idx >= 0)
+            shops[idx] = {
+              ...shops[idx],
+              name,
+              players,
+              format,
+              rule,
+              uma,
+              chipUnit,
+              chipNote,
+            };
+        } else {
+          shops.push({
+            id: Date.now(),
+            name,
+            players,
+            format,
+            rule,
+            uma,
+            chipUnit,
+            chipNote,
+          });
+        }
+        saveShops(shops);
+        populateShopPreset();
+        cancelShopForm();
+        renderShopList();
+        showToast(editId ? "店舗を更新しました" : "店舗を追加しました");
+      }
 
-function deleteShop(id){
-  if(!confirm('この店舗を削除しますか？'))return;
-  saveShops(loadShops().filter(s=>s.id!==id));
-  populateShopPreset();renderShopList();
-  showToast('削除しました');
-}
+      function deleteShop(id) {
+        if (!confirm("この店舗を削除しますか？")) return;
+        saveShops(loadShops().filter((s) => s.id !== id));
+        populateShopPreset();
+        renderShopList();
+        showToast("削除しました");
+      }
 
-function renderDataTab(){document.getElementById('data-count').textContent=loadSessions().length;}
+      function renderDataTab() {
+        document.getElementById("data-count").textContent =
+          loadSessions().length;
+      }
 
-function dl(content,type,filename){
-  const a=document.createElement('a');
-  a.href=URL.createObjectURL(new Blob([content],{type}));
-  a.download=filename;a.click();
-}
+      function dl(content, type, filename) {
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(new Blob([content], { type }));
+        a.download = filename;
+        a.click();
+      }
 
-function exportJSON(){
-  const data=loadSessions();
-  if(!data.length){showToast('データがありません');return;}
-  dl(JSON.stringify({sessions:data,shops:loadShops()},null,2),'application/json','麻雀成績_バックアップ_'+today()+'.json');
-  showToast('JSONエクスポート完了 📄');
-}
+      function exportJSON() {
+        const data = loadSessions();
+        if (!data.length) {
+          showToast("データがありません");
+          return;
+        }
+        dl(
+          JSON.stringify({ sessions: data, shops: loadShops() }, null, 2),
+          "application/json",
+          "麻雀成績_バックアップ_" + today() + ".json",
+        );
+        showToast("JSONエクスポート完了 📄");
+      }
 
-function exportCSV(){
-  const data=loadSessions();
-  if(!data.length){showToast('データがありません');return;}
-  const hdr=['日付','店舗名','人数','戦型','レート','1着','2着','3着','4着','総局数','現金収支','チップ枚数','チップ収支','純収支','メモ'];
-  const rows=data.map(s=>{
-    const max=s.players||4;
-    const total=[1,2,3,4].filter(p=>p<=max).reduce((a,p)=>a+(s.counts[p]||0),0);
-    return [s.date,s.shop,s.players+'人',s.format,s.rule||'',
-      s.counts[1]||0,s.counts[2]||0,s.counts[3]||0,s.players===4?(s.counts[4]||0):'—',
-      total,s.balance||0,s.chips||0,s.chipVal||0,s.net!==undefined?s.net:s.balance,s.note||''
-    ].map(v=>'"'+String(v).replace(/"/g,'""')+'"');
-  });
-  dl('\uFEFF'+[hdr,...rows].map(r=>r.join(',')).join('\r\n'),'text/csv;charset=utf-8','麻雀成績_'+today()+'.csv');
-  showToast('CSVエクスポート完了 📊');
-}
+      function exportCSV() {
+        const data = loadSessions();
+        if (!data.length) {
+          showToast("データがありません");
+          return;
+        }
+        const hdr = [
+          "日付",
+          "店舗名",
+          "人数",
+          "戦型",
+          "レート",
+          "1着",
+          "2着",
+          "3着",
+          "4着",
+          "総局数",
+          "現金収支",
+          "チップ枚数",
+          "チップ収支",
+          "純収支",
+          "メモ",
+        ];
+        const rows = data.map((s) => {
+          const max = s.players || 4;
+          const total = [1, 2, 3, 4]
+            .filter((p) => p <= max)
+            .reduce((a, p) => a + (s.counts[p] || 0), 0);
+          return [
+            s.date,
+            s.shop,
+            s.players + "人",
+            s.format,
+            s.rule || "",
+            s.counts[1] || 0,
+            s.counts[2] || 0,
+            s.counts[3] || 0,
+            s.players === 4 ? s.counts[4] || 0 : "—",
+            total,
+            s.balance || 0,
+            s.chips || 0,
+            s.chipVal || 0,
+            s.net !== undefined ? s.net : s.balance,
+            s.note || "",
+          ].map((v) => '"' + String(v).replace(/"/g, '""') + '"');
+        });
+        dl(
+          "\uFEFF" + [hdr, ...rows].map((r) => r.join(",")).join("\r\n"),
+          "text/csv;charset=utf-8",
+          "麻雀成績_" + today() + ".csv",
+        );
+        showToast("CSVエクスポート完了 📊");
+      }
 
-function importJSON(e){
-  const file=e.target.files[0];if(!file)return;
-  const reader=new FileReader();
-  reader.onload=ev=>{
-    try{
-      const imported=JSON.parse(ev.target.result);
-      const newSessions=Array.isArray(imported)?imported:(imported.sessions||[]);
-      const existing=loadSessions();
-      const ids=new Set(existing.map(s=>s.id));
-      const added=newSessions.filter(s=>s.id&&!ids.has(s.id));
-      saveSessions([...existing,...added].sort((a,b)=>b.date.localeCompare(a.date)));
-      updateTopStats();renderDataTab();
-      showToast(`${added.length}件インポートしました ✔`);
-    }catch{showToast('読み込みに失敗しました');}
-    e.target.value='';
-  };
-  reader.readAsText(file);
-}
+      function importJSON(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          try {
+            const imported = JSON.parse(ev.target.result);
+            const newSessions = Array.isArray(imported)
+              ? imported
+              : imported.sessions || [];
+            const existing = loadSessions();
+            const ids = new Set(existing.map((s) => s.id));
+            const added = newSessions.filter((s) => s.id && !ids.has(s.id));
+            saveSessions(
+              [...existing, ...added].sort((a, b) =>
+                b.date.localeCompare(a.date),
+              ),
+            );
+            updateTopStats();
+            renderDataTab();
+            showToast(`${added.length}件インポートしました ✔`);
+          } catch {
+            showToast("読み込みに失敗しました");
+          }
+          e.target.value = "";
+        };
+        reader.readAsText(file);
+      }
 
-function clearAll(){
-  if(!loadSessions().length){showToast('データがありません');return;}
-  if(!confirm('全データを削除します。\nエクスポートしましたか？\n\nこの操作は元に戻せません。'))return;
-  localStorage.removeItem('mj4_sessions');
-  updateTopStats();renderDataTab();
-  showToast('削除しました');
-}
+      function clearAll() {
+        if (!loadSessions().length) {
+          showToast("データがありません");
+          return;
+        }
+        if (
+          !confirm(
+            "全データを削除します。\nエクスポートしましたか？\n\nこの操作は元に戻せません。",
+          )
+        )
+          return;
+        localStorage.removeItem("mj4_sessions");
+        updateTopStats();
+        renderDataTab();
+        showToast("削除しました");
+      }
 
-function showToast(msg){
-  const el=document.getElementById('toast');
-  el.textContent=msg;el.classList.add('show');
-  setTimeout(()=>el.classList.remove('show'),2400);
-}
-</script>
+      function showToast(msg) {
+        const el = document.getElementById("toast");
+        el.textContent = msg;
+        el.classList.add("show");
+        setTimeout(() => el.classList.remove("show"), 2400);
+      }
+    </script>
 
-<script>
-// Service Worker 登録（PWA オフライン対応）
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./sw.js')
-      .catch(err => console.warn('SW registration failed:', err));
-  });
-}
-</script>
-</body>
+    <script>
+      // Service Worker 登録（PWA オフライン対応）
+      if ("serviceWorker" in navigator) {
+        window.addEventListener("load", () => {
+          navigator.serviceWorker
+            .register("./sw.js")
+            .catch((err) => console.warn("SW registration failed:", err));
+        });
+      }
+    </script>
+  </body>
 </html>

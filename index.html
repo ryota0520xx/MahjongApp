@@ -860,28 +860,6 @@
         display: block;
         margin: 12px 0 8px;
       }
-      .uma-grid {
-        display: grid;
-        grid-template-columns: repeat(4, 1fr);
-        gap: 8px;
-        margin-bottom: 14px;
-      }
-      @media (max-width: 440px) {
-        .uma-grid {
-          grid-template-columns: repeat(2, 1fr);
-        }
-      }
-      .uma-fg label {
-        font-size: 0.65rem;
-        color: var(--gold);
-      }
-      .uma-fg input {
-        border-color: rgba(184, 134, 11, 0.3);
-        text-align: center;
-      }
-      .uma-fg input:focus {
-        border-color: var(--gold);
-      }
       hr.div {
         border: none;
         border-top: 1px solid rgba(26, 18, 8, 0.1);
@@ -1192,7 +1170,7 @@
           <select class="fsel" id="f-rate" onchange="renderHistory()"></select>
           <select class="fsel" id="f-fee" onchange="renderHistory()">
             <option value="0">ゲーム代なし</option>
-            <option value="1">ゲーム代あり</option>
+            <option value="1" selected>ゲーム代あり</option>
           </select>
           <div
             style="
@@ -1312,7 +1290,7 @@
           ></select>
           <select class="fsel" id="an-fee" onchange="renderAnalysis()">
             <option value="0">ゲーム代なし</option>
-            <option value="1">ゲーム代あり</option>
+            <option value="1" selected>ゲーム代あり</option>
           </select>
           <div
             style="
@@ -1348,19 +1326,15 @@
           <h3>累計純収支の推移</h3>
           <div class="line-chart-wrap" id="an-line"></div>
         </div>
-        <div class="a-grid">
-          <div class="a-card">
+        <div class="a-grid" id="an-dist-grid">
+          <div class="a-card" id="an-dist4-card">
             <h3>着順分布（四人）</h3>
             <div id="an-dist4"></div>
           </div>
-          <div class="a-card">
+          <div class="a-card" id="an-dist3-card">
             <h3>着順分布（三人）</h3>
             <div id="an-dist3"></div>
           </div>
-        </div>
-        <div class="a-card" style="margin-bottom: 13px">
-          <h3>着順分布（総合）</h3>
-          <div id="an-dist-combined"></div>
         </div>
         <div class="a-grid">
           <div class="a-card">
@@ -1416,27 +1390,6 @@
           <div class="fg" style="margin-bottom: 4px">
             <label>レート</label>
             <select id="sf-rule"></select>
-          </div>
-
-          <hr class="div" />
-          <span class="section-lbl">ウマ設定（任意）</span>
-          <div class="uma-grid">
-            <div class="fg uma-fg">
-              <label>1着</label
-              ><input type="number" id="sf-u1" placeholder="+10" />
-            </div>
-            <div class="fg uma-fg">
-              <label>2着</label
-              ><input type="number" id="sf-u2" placeholder="+5" />
-            </div>
-            <div class="fg uma-fg">
-              <label>3着</label
-              ><input type="number" id="sf-u3" placeholder="−5" />
-            </div>
-            <div class="fg uma-fg" id="sf-u4-wrap">
-              <label>4着</label
-              ><input type="number" id="sf-u4" placeholder="−10" />
-            </div>
           </div>
 
           <hr class="div" />
@@ -2154,22 +2107,15 @@
         if (startDate) rawAll = rawAll.filter((s) => s.date >= startDate);
         if (endDate) rawAll = rawAll.filter((s) => s.date <= endDate);
 
-        const all = withFees
-          ? rawAll.map((s) => ({ ...s, net: getNet(s, true) }))
-          : rawAll;
+        const all = rawAll.map((s) => ({ ...s, net: getNet(s, withFees) }));
         renderAvgRank(all);
         renderLineChart(all);
-        renderDist(
-          all.filter((s) => s.players === 4),
-          4,
-          "an-dist4",
-        );
-        renderDist(
-          all.filter((s) => s.players === 3),
-          3,
-          "an-dist3",
-        );
-        renderDistCombined(all, "an-dist-combined");
+        const show4 = anPlayers !== "3";
+        const show3 = anPlayers !== "4";
+        document.getElementById("an-dist4-card").style.display = show4 ? "" : "none";
+        document.getElementById("an-dist3-card").style.display = show3 ? "" : "none";
+        if (show4) renderDist(all.filter((s) => s.players === 4), 4, "an-dist4");
+        if (show3) renderDist(all.filter((s) => s.players === 3), 3, "an-dist3");
         renderBal(all);
         renderMonthly(all);
         renderShopStats(all);
@@ -2454,9 +2400,6 @@
         }
         el.innerHTML = shops
           .map((s) => {
-            const uma = s.uma
-              ? `ウマ ${s.uma[1] >= 0 ? "+" : ""}${s.uma[1]} / ${s.uma[2] >= 0 ? "+" : ""}${s.uma[2]} / ${s.uma[3]} / ${s.uma[4] ?? "—"}`
-              : "";
             const chip = s.chipUnit
               ? `チップ ${s.chipUnit}円/枚${s.chipNote ? " (" + s.chipNote + ")" : ""}`
               : "";
@@ -2469,7 +2412,7 @@
             return `<div class="shop-card">
       <div style="flex:1;min-width:0;">
         <div class="sc-name">${esc(s.name)}</div>
-        <div class="sc-detail">${s.players}人 ${s.format}${s.rule ? " / " + esc(s.rule) : ""}${uma ? "<br>" + uma : ""}${chip ? (uma ? " ／ " : "<br>") + chip : ""}${fees ? "<br>" + fees : ""}</div>
+        <div class="sc-detail">${s.players}人 ${s.format}${s.rule ? " / " + esc(s.rule) : ""}${chip ? "<br>" + chip : ""}${fees ? "<br>" + fees : ""}</div>
       </div>
       <div class="sc-actions">
         <button class="btn-ghost" onclick="editShop(${s.id})">編集</button>
@@ -2489,10 +2432,6 @@
         document.getElementById("sf-format").value =
           shopData?.format || "東南戦";
         document.getElementById("sf-rule").value = shopData?.rule || "";
-        document.getElementById("sf-u1").value = shopData?.uma?.[1] ?? "";
-        document.getElementById("sf-u2").value = shopData?.uma?.[2] ?? "";
-        document.getElementById("sf-u3").value = shopData?.uma?.[3] ?? "";
-        document.getElementById("sf-u4").value = shopData?.uma?.[4] ?? "";
         document.getElementById("sf-chip-unit").value =
           shopData?.chipUnit || "";
         document.getElementById("sf-chip-note").value =
@@ -2524,10 +2463,6 @@
         const players = parseInt(document.getElementById("sf-players").value);
         const format = document.getElementById("sf-format").value;
         const rule = document.getElementById("sf-rule").value;
-        const u1 = document.getElementById("sf-u1").value;
-        const u2 = document.getElementById("sf-u2").value;
-        const u3 = document.getElementById("sf-u3").value;
-        const u4 = document.getElementById("sf-u4").value;
         const chipUnit =
           parseInt(document.getElementById("sf-chip-unit").value) || 0;
         const chipNote = document.getElementById("sf-chip-note").value.trim();
@@ -2535,15 +2470,6 @@
           parseInt(document.getElementById("sf-game-fee").value) || 0;
         const topPrize =
           parseInt(document.getElementById("sf-top-prize").value) || 0;
-        const uma =
-          u1 || u2 || u3 || u4
-            ? {
-                1: parseFloat(u1) || 0,
-                2: parseFloat(u2) || 0,
-                3: parseFloat(u3) || 0,
-                4: parseFloat(u4) || 0,
-              }
-            : null;
         const editId =
           parseInt(document.getElementById("sf-editing-id").value) || null;
         const shops = loadShops();
@@ -2556,7 +2482,6 @@
               players,
               format,
               rule,
-              uma,
               chipUnit,
               chipNote,
               gameFee,
@@ -2569,7 +2494,6 @@
             players,
             format,
             rule,
-            uma,
             chipUnit,
             chipNote,
             gameFee,

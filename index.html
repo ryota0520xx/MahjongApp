@@ -1178,13 +1178,8 @@
           </select>
           <select class="fsel" id="f-rate" onchange="renderHistory()"></select>
           <select class="fsel" id="f-fee" onchange="renderHistory()">
-            <option value="0">ゲーム代なし</option>
-            <option value="1" selected>ゲーム代あり</option>
-          </select>
-          <select class="fsel" id="f-venue" onchange="renderHistory()">
-            <option value="all">全場代</option>
-            <option value="1">場代あり</option>
-            <option value="0">場代なし</option>
+            <option value="0">ゲーム代・場代なし</option>
+            <option value="1" selected>ゲーム代・場代あり</option>
           </select>
           <div
             style="
@@ -1218,7 +1213,6 @@
             <option value="balL">収支低い順</option>
           </select>
         </div>
-        <div id="history-summary"></div>
         <div id="history-list"></div>
 
         <div
@@ -1303,13 +1297,8 @@
             onchange="renderAnalysis()"
           ></select>
           <select class="fsel" id="an-fee" onchange="renderAnalysis()">
-            <option value="0">ゲーム代なし</option>
-            <option value="1" selected>ゲーム代あり</option>
-          </select>
-          <select class="fsel" id="an-venue" onchange="renderAnalysis()">
-            <option value="all">全場代</option>
-            <option value="1">場代あり</option>
-            <option value="0">場代なし</option>
+            <option value="0">ゲーム代・場代なし</option>
+            <option value="1" selected>ゲーム代・場代あり</option>
           </select>
           <div
             style="
@@ -1865,9 +1854,13 @@
 
       function getNet(s, withFees) {
         const net = s.net !== undefined ? s.net : s.balance;
-        // ユーザー入力値はゲーム代を支払った後の実際の収支（ゲーム代あり）
-        // ゲーム代なしの場合は、ゲーム代・トップ賞を加算して仮想収支を算出
-        if (withFees || (!s.gameFee && !s.topPrize)) return net;
+        // ゲーム代・場代あり: ユーザー入力値そのまま（実際の収支）
+        if (withFees) return net;
+        // ゲーム代・場代なし: セットは場代を加算、フリーはゲーム代・トップ賞を加算
+        if (s.gameType === "set") {
+          return net + (s.venueFee || 0);
+        }
+        if (!s.gameFee && !s.topPrize) return net;
         const total = [1, 2, 3, 4]
           .filter((p) => p <= (s.players || 4))
           .reduce((sum, p) => sum + (s.counts[p] || 0), 0);
@@ -1884,7 +1877,6 @@
         const fr = document.getElementById("f-rate").value;
         const fs = document.getElementById("f-sort").value;
         const ff = document.getElementById("f-fee").value === "1";
-        const fvenue = document.getElementById("f-venue").value;
         const fshop = document.getElementById("f-shop").value;
         const fDateStart = document.getElementById("f-date-start").value;
         const fDateEnd = document.getElementById("f-date-end").value;
@@ -1912,10 +1904,6 @@
         if (fshop !== "all") data = data.filter((s) => s.shop === fshop);
         if (fDateStart) data = data.filter((s) => s.date >= fDateStart);
         if (fDateEnd) data = data.filter((s) => s.date <= fDateEnd);
-        if (fvenue !== "all")
-          data = data.filter((s) =>
-            fvenue === "1" ? (s.venueFee || 0) > 0 : (s.venueFee || 0) === 0,
-          );
 
         if (fs === "old")
           data.sort((a, b) => a.date.localeCompare(b.date) || a.id - b.id);
@@ -1926,51 +1914,11 @@
         else data.sort((a, b) => b.date.localeCompare(a.date) || b.id - a.id); // Default to new first
 
         const el = document.getElementById("history-list");
-        const sumEl = document.getElementById("history-summary");
         if (!data.length) {
-          sumEl.innerHTML = "";
           el.innerHTML =
             '<div class="empty"><span>🀄</span>記録がありません</div>';
           return;
         }
-
-        // フィルター後サマリー計算
-        let totalGames = 0,
-          sumRank = 0,
-          totalBal = 0;
-        const rankCounts = { 1: 0, 2: 0, 3: 0, 4: 0 };
-        const maxPlayers = fp !== "all" ? parseInt(fp) : 4;
-        data.forEach((s) => {
-          for (let p = 1; p <= (s.players || 4); p++) {
-            const c = s.counts[p] || 0;
-            totalGames += c;
-            sumRank += p * c;
-            rankCounts[p] += c;
-          }
-          totalBal += getNet(s, ff);
-        });
-        const avgRank = totalGames ? (sumRank / totalGames).toFixed(2) : "—";
-        const fbal = (v) => (v > 0 ? "+" : "") + v.toLocaleString() + "円";
-        const bclass = (v) =>
-          v > 0 ? "var(--teal)" : v < 0 ? "var(--red)" : "inherit";
-        const rankItems = [1, 2, 3, 4]
-          .filter((p) => (fp === "all" ? rankCounts[p] > 0 : p <= maxPlayers))
-          .map(
-            (p) => `<div class="hs-item">
-            <span class="hs-lbl" style="color:${COLORS[p]}">${p}着</span>
-            <span class="hs-val" style="color:${COLORS[p]}">${rankCounts[p]}</span>
-          </div>`,
-          )
-          .join("");
-        sumEl.innerHTML = `<div class="hist-summary">
-          <div class="hs-item"><span class="hs-lbl">セッション</span><span class="hs-val">${data.length}回</span></div>
-          <div class="hs-item"><span class="hs-lbl">総ゲーム数</span><span class="hs-val">${totalGames}ゲーム</span></div>
-          <div class="hs-item"><span class="hs-lbl">平均着順</span><span class="hs-val">${avgRank}</span></div>
-          <div class="hs-sep"></div>
-          ${rankItems}
-          <div class="hs-sep"></div>
-          <div class="hs-item"><span class="hs-lbl">収支合計</span><span class="hs-val" style="color:${bclass(totalBal)}">${fbal(totalBal)}</span></div>
-        </div>`;
 
         const fn = (v) => (v > 0 ? "+" : "") + v.toLocaleString() + "円";
         const bc = (v) => (v > 0 ? "pos" : v < 0 ? "neg" : "zero");
@@ -2109,7 +2057,6 @@
 
       function renderAnalysis() {
         const withFees = document.getElementById("an-fee").value === "1";
-        const anVenue = document.getElementById("an-venue").value;
         const anGt = document.getElementById("an-gametype").value;
         const anPlayers = document.getElementById("an-players").value;
         const anShop = document.getElementById("an-shop-filter").value;
@@ -2140,10 +2087,6 @@
         if (anRate !== "all") rawAll = rawAll.filter((s) => s.rule == anRate);
         if (startDate) rawAll = rawAll.filter((s) => s.date >= startDate);
         if (endDate) rawAll = rawAll.filter((s) => s.date <= endDate);
-        if (anVenue !== "all")
-          rawAll = rawAll.filter((s) =>
-            anVenue === "1" ? (s.venueFee || 0) > 0 : (s.venueFee || 0) === 0,
-          );
 
         const all = rawAll.map((s) => ({ ...s, net: getNet(s, withFees) }));
         renderAvgRank(all);

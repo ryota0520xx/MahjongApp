@@ -1883,13 +1883,15 @@
 
       function getNet(s, withFees) {
         const net = s.net !== undefined ? s.net : s.balance;
-        if (!withFees || (!s.gameFee && !s.topPrize)) return net;
+        // ユーザー入力値はゲーム代を支払った後の実際の収支（ゲーム代あり）
+        // ゲーム代なしの場合は、ゲーム代・トップ賞を加算して仮想収支を算出
+        if (withFees || (!s.gameFee && !s.topPrize)) return net;
         const total = [1, 2, 3, 4]
           .filter((p) => p <= (s.players || 4))
           .reduce((sum, p) => sum + (s.counts[p] || 0), 0);
         return (
-          net -
-          total * (s.gameFee || 0) -
+          net +
+          total * (s.gameFee || 0) +
           (s.counts[1] || 0) * (s.topPrize || 0)
         );
       }

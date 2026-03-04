@@ -1085,7 +1085,7 @@
             <div class="pt">着順カウンター</div>
             <div class="total-row">
               <div class="total-badge">
-                本日 <strong id="cur-total">0</strong> 局
+                本日 <strong id="cur-total">0</strong> ゲーム
               </div>
             </div>
             <div class="counter-grid" id="counter-grid"></div>
@@ -1166,7 +1166,7 @@
           <select class="fsel" id="f-players" onchange="renderHistory()">
             <option value="all">全人数</option>
             <option value="4">四麻</option>
-            <oion value="3">三麻</option>
+            <option value="3">三麻</option>
           </select>
           <select class="fsel" id="f-gametype" onchange="renderHistory()">
             <option value="all">全種別</option>
@@ -1180,6 +1180,11 @@
           <select class="fsel" id="f-fee" onchange="renderHistory()">
             <option value="0">ゲーム代なし</option>
             <option value="1" selected>ゲーム代あり</option>
+          </select>
+          <select class="fsel" id="f-venue" onchange="renderHistory()">
+            <option value="all">全場代</option>
+            <option value="1">場代あり</option>
+            <option value="0">場代なし</option>
           </select>
           <div
             style="
@@ -1301,6 +1306,11 @@
             <option value="0">ゲーム代なし</option>
             <option value="1" selected>ゲーム代あり</option>
           </select>
+          <select class="fsel" id="an-venue" onchange="renderAnalysis()">
+            <option value="all">全場代</option>
+            <option value="1">場代あり</option>
+            <option value="0">場代なし</option>
+          </select>
           <div
             style="
               display: flex;
@@ -1418,7 +1428,7 @@
           <span class="section-lbl">ゲーム代・トップ賞（任意）</span>
           <div class="g2" style="margin-bottom: 14px">
             <div class="fg">
-              <label>ゲーム代（円/局）</label>
+              <label>ゲーム代（円/ゲーム）</label>
               <input type="number" id="sf-game-fee" placeholder="例：200" />
             </div>
             <div class="fg">
@@ -1697,7 +1707,7 @@
         <button class="cnt-btn minus" ontouchstart="" onclick="chg(${p},-1)">－</button>
         <button class="cnt-btn plus" ontouchstart="" onclick="chg(${p},1)">＋</button>
       </div>
-      <div class="cnt-sub" id="sub${p}">0局</div>`;
+      <div class="cnt-sub" id="sub${p}">0ゲーム</div>`;
           grid.appendChild(d);
         }
       }
@@ -1725,7 +1735,7 @@
           const ne = document.getElementById("n" + p),
             se = document.getElementById("sub" + p);
           if (ne) ne.textContent = c;
-          if (se) se.textContent = c + "局";
+          if (se) se.textContent = c + "ゲーム";
           total += c;
         }
         document.getElementById("cur-total").textContent = total;
@@ -1874,6 +1884,7 @@
         const fr = document.getElementById("f-rate").value;
         const fs = document.getElementById("f-sort").value;
         const ff = document.getElementById("f-fee").value === "1";
+        const fvenue = document.getElementById("f-venue").value;
         const fshop = document.getElementById("f-shop").value;
         const fDateStart = document.getElementById("f-date-start").value;
         const fDateEnd = document.getElementById("f-date-end").value;
@@ -1901,6 +1912,10 @@
         if (fshop !== "all") data = data.filter((s) => s.shop === fshop);
         if (fDateStart) data = data.filter((s) => s.date >= fDateStart);
         if (fDateEnd) data = data.filter((s) => s.date <= fDateEnd);
+        if (fvenue !== "all")
+          data = data.filter((s) =>
+            fvenue === "1" ? (s.venueFee || 0) > 0 : (s.venueFee || 0) === 0,
+          );
 
         if (fs === "old")
           data.sort((a, b) => a.date.localeCompare(b.date) || a.id - b.id);
@@ -1935,7 +1950,6 @@
           totalBal += getNet(s, ff);
         });
         const avgRank = totalGames ? (sumRank / totalGames).toFixed(2) : "—";
-        const avgBal = data.length ? Math.round(totalBal / data.length) : 0;
         const fbal = (v) => (v > 0 ? "+" : "") + v.toLocaleString() + "円";
         const bclass = (v) =>
           v > 0 ? "var(--teal)" : v < 0 ? "var(--red)" : "inherit";
@@ -1950,13 +1964,12 @@
           .join("");
         sumEl.innerHTML = `<div class="hist-summary">
           <div class="hs-item"><span class="hs-lbl">セッション</span><span class="hs-val">${data.length}回</span></div>
-          <div class="hs-item"><span class="hs-lbl">総局数</span><span class="hs-val">${totalGames}局</span></div>
+          <div class="hs-item"><span class="hs-lbl">総ゲーム数</span><span class="hs-val">${totalGames}ゲーム</span></div>
           <div class="hs-item"><span class="hs-lbl">平均着順</span><span class="hs-val">${avgRank}</span></div>
           <div class="hs-sep"></div>
           ${rankItems}
           <div class="hs-sep"></div>
           <div class="hs-item"><span class="hs-lbl">収支合計</span><span class="hs-val" style="color:${bclass(totalBal)}">${fbal(totalBal)}</span></div>
-          <div class="hs-item"><span class="hs-lbl">平均収支</span><span class="hs-val" style="color:${bclass(avgBal)}">${fbal(avgBal)}</span></div>
         </div>`;
 
         const fn = (v) => (v > 0 ? "+" : "") + v.toLocaleString() + "円";
@@ -2002,7 +2015,7 @@
       </div>
       <div class="sb">
         ${chips}
-        <div class="stotal">${total}局</div>
+        <div class="stotal">${total}ゲーム</div>
         ${chipBadge}
         ${venueBadge}
         ${s.note ? `<div class="snote">${esc(s.note)}</div>` : ""}
@@ -2096,6 +2109,7 @@
 
       function renderAnalysis() {
         const withFees = document.getElementById("an-fee").value === "1";
+        const anVenue = document.getElementById("an-venue").value;
         const anGt = document.getElementById("an-gametype").value;
         const anPlayers = document.getElementById("an-players").value;
         const anShop = document.getElementById("an-shop-filter").value;
@@ -2126,6 +2140,10 @@
         if (anRate !== "all") rawAll = rawAll.filter((s) => s.rule == anRate);
         if (startDate) rawAll = rawAll.filter((s) => s.date >= startDate);
         if (endDate) rawAll = rawAll.filter((s) => s.date <= endDate);
+        if (anVenue !== "all")
+          rawAll = rawAll.filter((s) =>
+            anVenue === "1" ? (s.venueFee || 0) > 0 : (s.venueFee || 0) === 0,
+          );
 
         const all = rawAll.map((s) => ({ ...s, net: getNet(s, withFees) }));
         renderAvgRank(all);
@@ -2310,12 +2328,12 @@
         let html = "";
         if (r4.games) {
           html += `<div class="kv"><span>四麻 平均着順</span><span class="v">${r4.avg}</span></div>`;
-          html += `<div class="kv"><span>四麻 対局数</span><span class="v">${r4.games}局</span></div>`;
+          html += `<div class="kv"><span>四麻 ゲーム数</span><span class="v">${r4.games}ゲーム</span></div>`;
         }
         if (r3.games) {
           if (r4.games) html += '<div style="border-top:1px solid rgba(26,18,8,0.1);margin:6px 0"></div>';
           html += `<div class="kv"><span>三麻 平均着順</span><span class="v">${r3.avg}</span></div>`;
-          html += `<div class="kv"><span>三麻 対局数</span><span class="v">${r3.games}局</span></div>`;
+          html += `<div class="kv"><span>三麻 ゲーム数</span><span class="v">${r3.games}ゲーム</span></div>`;
         }
         el.innerHTML = html;
       }
@@ -2403,7 +2421,7 @@
             const fn = (v) => (v >= 0 ? "+" : "") + v.toLocaleString() + "円";
             const chipStr = d.chipVal ? ` / チップ${fn(d.chipVal)}` : "";
             return `<div class="kv" style="padding:8px 0;border-bottom:1px solid rgba(26,18,8,0.07);">
-      <span><strong>${esc(shop)}</strong><br><small style="color:#bbb">${d.cnt}回 ${d.games}局 / 1着率${rate}${chipStr}</small></span>
+      <span><strong>${esc(shop)}</strong><br><small style="color:#bbb">${d.cnt}回 ${d.games}ゲーム / 1着率${rate}${chipStr}</small></span>
       <span class="v ${bc}">${fn(d.bal)}</span>
     </div>`;
           })
@@ -2424,7 +2442,7 @@
               ? `チップ ${s.chipUnit}円/枚${s.chipNote ? " (" + s.chipNote + ")" : ""}`
               : "";
             const fees = [
-              s.gameFee ? `ゲーム代${s.gameFee}円/局` : "",
+              s.gameFee ? `ゲーム代${s.gameFee}円/ゲーム` : "",
               s.topPrize ? `トップ賞${s.topPrize}円` : "",
             ]
               .filter(Boolean)
@@ -2578,7 +2596,7 @@
           "2着",
           "3着",
           "4着",
-          "総局数",
+          "総ゲーム数",
           "現金収支",
           "チップ枚数",
           "チップ収支",

@@ -22,5 +22,9 @@
     "@capacitor/android": "^8.1.0",
     "@capacitor/cli": "^8.1.0",
     "@capacitor/core": "^8.1.0"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.56.0",
+    "serve": "^14.2.6"
   }
 }

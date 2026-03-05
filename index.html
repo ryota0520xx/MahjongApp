@@ -1085,7 +1085,7 @@
             <div class="pt">着順カウンター</div>
             <div class="total-row">
               <div class="total-badge">
-                本日 <strong id="cur-total">0</strong> 局
+                本日 <strong id="cur-total">0</strong> ゲーム
               </div>
             </div>
             <div class="counter-grid" id="counter-grid"></div>
@@ -1095,7 +1095,7 @@
             <div class="pt">収支・チップを入力して保存</div>
             <div class="g2" style="margin-bottom: 11px">
               <div class="fg">
-                <label>最終現金収支（ゲーム代等支払い後）</label>
+                <label id="balance-label">最終現金収支（ゲーム代等支払い後）</label>
                 <input
                   type="number"
                   id="s-balance"
@@ -1111,6 +1111,15 @@
                   placeholder="+5 or −3"
                   oninput="updateChipCalc()"
                 />
+                <div id="chip-unit-manual-wrap" style="display:none; margin-top:6px">
+                  <label>チップ単価（円/枚）</label>
+                  <input
+                    type="number"
+                    id="s-chip-unit-manual"
+                    placeholder="例：500"
+                    oninput="updateChipCalc()"
+                  />
+                </div>
                 <div class="chip-hint" id="chip-calc"></div>
               </div>
             </div>
@@ -1157,7 +1166,7 @@
           <select class="fsel" id="f-players" onchange="renderHistory()">
             <option value="all">全人数</option>
             <option value="4">四麻</option>
-            <oion value="3">三麻</option>
+            <option value="3">三麻</option>
           </select>
           <select class="fsel" id="f-gametype" onchange="renderHistory()">
             <option value="all">全種別</option>
@@ -1169,8 +1178,8 @@
           </select>
           <select class="fsel" id="f-rate" onchange="renderHistory()"></select>
           <select class="fsel" id="f-fee" onchange="renderHistory()">
-            <option value="0">ゲーム代なし</option>
-            <option value="1" selected>ゲーム代あり</option>
+            <option value="0">ゲーム代・場代なし</option>
+            <option value="1" selected>ゲーム代・場代あり</option>
           </select>
           <div
             style="
@@ -1204,7 +1213,6 @@
             <option value="balL">収支低い順</option>
           </select>
         </div>
-        <div id="history-summary"></div>
         <div id="history-list"></div>
 
         <div
@@ -1289,8 +1297,8 @@
             onchange="renderAnalysis()"
           ></select>
           <select class="fsel" id="an-fee" onchange="renderAnalysis()">
-            <option value="0">ゲーム代なし</option>
-            <option value="1" selected>ゲーム代あり</option>
+            <option value="0">ゲーム代・場代なし</option>
+            <option value="1" selected>ゲーム代・場代あり</option>
           </select>
           <div
             style="
@@ -1409,7 +1417,7 @@
           <span class="section-lbl">ゲーム代・トップ賞（任意）</span>
           <div class="g2" style="margin-bottom: 14px">
             <div class="fg">
-              <label>ゲーム代（円/局）</label>
+              <label>ゲーム代（円/ゲーム）</label>
               <input type="number" id="sf-game-fee" placeholder="例：200" />
             </div>
             <div class="fg">
@@ -1656,11 +1664,21 @@
         buildCards();
         refreshCounts();
         const chipWrap = document.getElementById("chip-input-wrap");
-        chipWrap.style.display =
-          cur.shopData && cur.shopData.chipUnit ? "" : "none";
+        const chipUnitManualWrap = document.getElementById("chip-unit-manual-wrap");
+        const balLabel = document.getElementById("balance-label");
+        const isSet = cur.gameType === "set";
+        if (isSet) {
+          chipWrap.style.display = "";
+          chipUnitManualWrap.style.display = (cur.shopData && cur.shopData.chipUnit) ? "none" : "";
+          balLabel.textContent = "素点収支（チップ・場代除く）";
+        } else {
+          chipWrap.style.display = (cur.shopData && cur.shopData.chipUnit) ? "" : "none";
+          chipUnitManualWrap.style.display = "none";
+          balLabel.textContent = "最終現金収支（ゲーム代等支払い後）";
+        }
         const venueFeeWrap = document.getElementById("venue-fee-wrap");
         if (venueFeeWrap)
-          venueFeeWrap.style.display = cur.gameType === "set" ? "" : "none";
+          venueFeeWrap.style.display = isSet ? "" : "none";
         updateSaveSummary();
       }
 
@@ -1678,7 +1696,7 @@
         <button class="cnt-btn minus" ontouchstart="" onclick="chg(${p},-1)">－</button>
         <button class="cnt-btn plus" ontouchstart="" onclick="chg(${p},1)">＋</button>
       </div>
-      <div class="cnt-sub" id="sub${p}">0局</div>`;
+      <div class="cnt-sub" id="sub${p}">0ゲーム</div>`;
           grid.appendChild(d);
         }
       }
@@ -1706,19 +1724,21 @@
           const ne = document.getElementById("n" + p),
             se = document.getElementById("sub" + p);
           if (ne) ne.textContent = c;
-          if (se) se.textContent = c + "局";
+          if (se) se.textContent = c + "ゲーム";
           total += c;
         }
         document.getElementById("cur-total").textContent = total;
       }
 
       function updateChipCalc() {
-        if (!cur || !cur.shopData || !cur.shopData.chipUnit) return;
+        const isSet = cur && cur.gameType === "set";
+        const shopUnit = cur && cur.shopData && cur.shopData.chipUnit;
+        if (!isSet && !shopUnit) return;
         const chips = parseInt(document.getElementById("s-chips").value) || 0;
-        const unit = cur.shopData.chipUnit;
+        const unit = shopUnit || (parseInt(document.getElementById("s-chip-unit-manual").value) || 0);
         const val = chips * unit;
         document.getElementById("chip-calc").textContent =
-          chips === 0
+          (!chips || !unit)
             ? ""
             : ` → チップ収支：${val >= 0 ? "+" : ""}${val.toLocaleString()}円（${unit}円/枚）`;
         updateSaveSummary();
@@ -1727,37 +1747,32 @@
       function updateSaveSummary() {
         const el = document.getElementById("save-summary");
         const isSet = cur && cur.gameType === "set";
-        const hasChips = !!(cur && cur.shopData && cur.shopData.chipUnit);
+        const shopUnit = cur && cur.shopData && cur.shopData.chipUnit;
+        const hasChips = !!(shopUnit || isSet);
 
-        // セットで場代入力欄があるか、またはチップ機能が有効な場合のみサマリーを表示
-        if (!hasChips && !(isSet && document.getElementById("s-venue-fee"))) {
+        if (!hasChips) {
           el.style.display = "none";
           return;
         }
 
         const cash = parseInt(document.getElementById("s-balance").value) || 0;
-        const chips = hasChips
-          ? parseInt(document.getElementById("s-chips").value) || 0
-          : 0;
-        const unit = hasChips ? cur.shopData.chipUnit : 0;
+        const chips = parseInt(document.getElementById("s-chips").value) || 0;
+        const unit = shopUnit || (isSet ? parseInt(document.getElementById("s-chip-unit-manual").value) || 0 : 0);
         const chipVal = chips * unit;
-
-        // 純収支は、最終的な現金収支とチップ収支の合計とする
         const net = cash + chipVal;
 
         const fn = (v) => (v >= 0 ? "+" : "") + v.toLocaleString() + "円";
         el.style.display = "";
 
-        let html = `最終現金収支 ${fn(cash)}`;
-        if (hasChips) {
-          html += `　＋　チップ収支 ${fn(chipVal)}`;
+        let html;
+        if (isSet) {
+          html = `素点収支 ${fn(cash)}　＋　チップ収支 ${fn(chipVal)}　＝　<strong>純収支 ${fn(net)}</strong>`;
+        } else {
+          html = `最終現金収支 ${fn(cash)}　＋　チップ収支 ${fn(chipVal)}　＝　<strong>純収支 ${fn(net)}</strong>`;
         }
-        html += `　＝　<strong>純収支 ${fn(net)}</strong>`;
 
-        // セットの場代は参考情報として表示する
         const venueFeeEl = document.getElementById("s-venue-fee");
-        const venueFee =
-          isSet && venueFeeEl ? parseInt(venueFeeEl.value) || 0 : 0;
+        const venueFee = isSet && venueFeeEl ? parseInt(venueFeeEl.value) || 0 : 0;
         if (isSet && venueFee > 0) {
           html += `<br><span style="font-size:0.8em; color: #777;">（参考：入力された場代 ${venueFee.toLocaleString()}円）</span>`;
         }
@@ -1780,7 +1795,7 @@
         sessionStorage.removeItem("mj4_cur");
         document.getElementById("setup-section").style.display = "";
         document.getElementById("session-section").style.display = "none";
-        ["s-balance", "s-chips", "s-note", "s-venue-fee"].forEach((id) => {
+        ["s-balance", "s-chips", "s-chip-unit-manual", "s-note", "s-venue-fee"].forEach((id) => {
           const el = document.getElementById(id);
           if (el) el.value = "";
         });
@@ -1794,16 +1809,19 @@
         const balance =
           parseInt(document.getElementById("s-balance").value) || 0;
         const note = document.getElementById("s-note").value.trim();
-        const chips =
-          cur.shopData && cur.shopData.chipUnit
-            ? parseInt(document.getElementById("s-chips").value) || 0
-            : 0;
-        const chipUnit = (cur.shopData && cur.shopData.chipUnit) || 0;
+        const isSet = cur.gameType === "set";
+        const shopUnit = cur.shopData && cur.shopData.chipUnit;
+        const hasChipsInput = !!(shopUnit || isSet);
+        const chips = hasChipsInput
+          ? parseInt(document.getElementById("s-chips").value) || 0
+          : 0;
+        const chipUnit = shopUnit || (isSet
+          ? parseInt(document.getElementById("s-chip-unit-manual").value) || 0
+          : 0);
         const chipVal = chips * chipUnit;
-        const venueFee =
-          cur.gameType === "set"
-            ? parseInt(document.getElementById("s-venue-fee").value) || 0
-            : 0;
+        const venueFee = isSet
+          ? parseInt(document.getElementById("s-venue-fee").value) || 0
+          : 0;
         const net = balance + chipVal - venueFee;
         const sessions = loadSessions();
         sessions.unshift({
@@ -1836,9 +1854,13 @@
 
       function getNet(s, withFees) {
         const net = s.net !== undefined ? s.net : s.balance;
-        // ユーザー入力値はゲーム代を支払った後の実際の収支（ゲーム代あり）
-        // ゲーム代なしの場合は、ゲーム代・トップ賞を加算して仮想収支を算出
-        if (withFees || (!s.gameFee && !s.topPrize)) return net;
+        // ゲーム代・場代あり: ユーザー入力値そのまま（実際の収支）
+        if (withFees) return net;
+        // ゲーム代・場代なし: セットは場代を加算、フリーはゲーム代・トップ賞を加算
+        if (s.gameType === "set") {
+          return net + (s.venueFee || 0);
+        }
+        if (!s.gameFee && !s.topPrize) return net;
         const total = [1, 2, 3, 4]
           .filter((p) => p <= (s.players || 4))
           .reduce((sum, p) => sum + (s.counts[p] || 0), 0);
@@ -1892,53 +1914,11 @@
         else data.sort((a, b) => b.date.localeCompare(a.date) || b.id - a.id); // Default to new first
 
         const el = document.getElementById("history-list");
-        const sumEl = document.getElementById("history-summary");
         if (!data.length) {
-          sumEl.innerHTML = "";
           el.innerHTML =
             '<div class="empty"><span>🀄</span>記録がありません</div>';
           return;
         }
-
-        // フィルター後サマリー計算
-        let totalGames = 0,
-          sumRank = 0,
-          totalBal = 0;
-        const rankCounts = { 1: 0, 2: 0, 3: 0, 4: 0 };
-        const maxPlayers = fp !== "all" ? parseInt(fp) : 4;
-        data.forEach((s) => {
-          for (let p = 1; p <= (s.players || 4); p++) {
-            const c = s.counts[p] || 0;
-            totalGames += c;
-            sumRank += p * c;
-            rankCounts[p] += c;
-          }
-          totalBal += getNet(s, ff);
-        });
-        const avgRank = totalGames ? (sumRank / totalGames).toFixed(2) : "—";
-        const avgBal = data.length ? Math.round(totalBal / data.length) : 0;
-        const fbal = (v) => (v > 0 ? "+" : "") + v.toLocaleString() + "円";
-        const bclass = (v) =>
-          v > 0 ? "var(--teal)" : v < 0 ? "var(--red)" : "inherit";
-        const rankItems = [1, 2, 3, 4]
-          .filter((p) => (fp === "all" ? rankCounts[p] > 0 : p <= maxPlayers))
-          .map(
-            (p) => `<div class="hs-item">
-            <span class="hs-lbl" style="color:${COLORS[p]}">${p}着</span>
-            <span class="hs-val" style="color:${COLORS[p]}">${rankCounts[p]}</span>
-          </div>`,
-          )
-          .join("");
-        sumEl.innerHTML = `<div class="hist-summary">
-          <div class="hs-item"><span class="hs-lbl">セッション</span><span class="hs-val">${data.length}回</span></div>
-          <div class="hs-item"><span class="hs-lbl">総局数</span><span class="hs-val">${totalGames}局</span></div>
-          <div class="hs-item"><span class="hs-lbl">平均着順</span><span class="hs-val">${avgRank}</span></div>
-          <div class="hs-sep"></div>
-          ${rankItems}
-          <div class="hs-sep"></div>
-          <div class="hs-item"><span class="hs-lbl">収支合計</span><span class="hs-val" style="color:${bclass(totalBal)}">${fbal(totalBal)}</span></div>
-          <div class="hs-item"><span class="hs-lbl">平均収支</span><span class="hs-val" style="color:${bclass(avgBal)}">${fbal(avgBal)}</span></div>
-        </div>`;
 
         const fn = (v) => (v > 0 ? "+" : "") + v.toLocaleString() + "円";
         const bc = (v) => (v > 0 ? "pos" : v < 0 ? "neg" : "zero");
@@ -1960,8 +1940,9 @@
               )
               .join("");
             const net = getNet(s, ff);
-            const chipBadge = s.chipVal
-              ? `<span class="chip-badge">チップ ${s.chipVal >= 0 ? "+" : ""}${s.chipVal.toLocaleString()}円</span>`
+            const chipCountStr = (s.chips && s.chipUnit) ? `${s.chips >= 0 ? "+" : ""}${s.chips}枚` : "";
+            const chipBadge = (s.chipVal || (s.chips && s.gameType === "set"))
+              ? `<span class="chip-badge">チップ ${chipCountStr}${chipCountStr && s.chipVal ? `（${s.chipVal >= 0 ? "+" : ""}${s.chipVal.toLocaleString()}円）` : s.chipVal ? `${s.chipVal >= 0 ? "+" : ""}${s.chipVal.toLocaleString()}円` : ""}</span>`
               : "";
             const venueBadge = s.venueFee
               ? `<span class="venue-badge">場代 −${s.venueFee.toLocaleString()}円</span>`
@@ -1982,7 +1963,7 @@
       </div>
       <div class="sb">
         ${chips}
-        <div class="stotal">${total}局</div>
+        <div class="stotal">${total}ゲーム</div>
         ${chipBadge}
         ${venueBadge}
         ${s.note ? `<div class="snote">${esc(s.note)}</div>` : ""}
@@ -2290,12 +2271,12 @@
         let html = "";
         if (r4.games) {
           html += `<div class="kv"><span>四麻 平均着順</span><span class="v">${r4.avg}</span></div>`;
-          html += `<div class="kv"><span>四麻 対局数</span><span class="v">${r4.games}局</span></div>`;
+          html += `<div class="kv"><span>四麻 ゲーム数</span><span class="v">${r4.games}ゲーム</span></div>`;
         }
         if (r3.games) {
           if (r4.games) html += '<div style="border-top:1px solid rgba(26,18,8,0.1);margin:6px 0"></div>';
           html += `<div class="kv"><span>三麻 平均着順</span><span class="v">${r3.avg}</span></div>`;
-          html += `<div class="kv"><span>三麻 対局数</span><span class="v">${r3.games}局</span></div>`;
+          html += `<div class="kv"><span>三麻 ゲーム数</span><span class="v">${r3.games}ゲーム</span></div>`;
         }
         el.innerHTML = html;
       }
@@ -2383,7 +2364,7 @@
             const fn = (v) => (v >= 0 ? "+" : "") + v.toLocaleString() + "円";
             const chipStr = d.chipVal ? ` / チップ${fn(d.chipVal)}` : "";
             return `<div class="kv" style="padding:8px 0;border-bottom:1px solid rgba(26,18,8,0.07);">
-      <span><strong>${esc(shop)}</strong><br><small style="color:#bbb">${d.cnt}回 ${d.games}局 / 1着率${rate}${chipStr}</small></span>
+      <span><strong>${esc(shop)}</strong><br><small style="color:#bbb">${d.cnt}回 ${d.games}ゲーム / 1着率${rate}${chipStr}</small></span>
       <span class="v ${bc}">${fn(d.bal)}</span>
     </div>`;
           })
@@ -2404,7 +2385,7 @@
               ? `チップ ${s.chipUnit}円/枚${s.chipNote ? " (" + s.chipNote + ")" : ""}`
               : "";
             const fees = [
-              s.gameFee ? `ゲーム代${s.gameFee}円/局` : "",
+              s.gameFee ? `ゲーム代${s.gameFee}円/ゲーム` : "",
               s.topPrize ? `トップ賞${s.topPrize}円` : "",
             ]
               .filter(Boolean)
@@ -2558,7 +2539,7 @@
           "2着",
           "3着",
           "4着",
-          "総局数",
+          "総ゲーム数",
           "現金収支",
           "チップ枚数",
           "チップ収支",
